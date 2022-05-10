@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import { Gol, Game } from "../../dist/goliath.js";
+        
+        class MyFirstGame extends Game {
+
+            constructor() {
+                super();
+            }
+
+            create() {
+
+            }
+
+            resize(width, height) {
+
+            }
+
+            render(delta) {
+                Gol.gl.clearColor(1, 0, 0, 1);
+                Gol.gl.clear(Gol.gl.COLOR_BUFFER_BIT);
+            }
+
+        }
+
+        addEventListener("DOMContentLoaded", () => {
+            new MyFirstGame();
+        });
+    </script>
+</body>
+</html>

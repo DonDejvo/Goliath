@@ -1,0 +1,24 @@
+{
+  "name": "goliath",
+  "version": "1.0.0",
+  "description": "HTML5 Game Library",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DonDejvo/Goliath.git"
+  },
+  "author": "DonDejvo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DonDejvo/Goliath/issues"
+  },
+  "homepage": "https://github.com/DonDejvo/Goliath#readme",
+  "dependencies": {
+    "esbuild": "^0.14.38",
+    "gl-matrix": "^3.4.3"
+  }
+}

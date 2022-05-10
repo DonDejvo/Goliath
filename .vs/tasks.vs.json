@@ -1,0 +1,10 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "úloha – index",
+      "appliesTo": "index.html",
+      "type": "launch"
+    }
+  ]
+}
