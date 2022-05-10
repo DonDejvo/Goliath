@@ -1,2 +1,2 @@
 # Goliath
-Game library
+HTML5 Game library
