@@ -17,7 +17,10 @@
 </head>
 <body>
     <script type="module">
-        import { Gol, Game } from "../../dist/goliath.js";
+        import { Gol, Game, graphics, glMatrix } from "../../dist/goliath.js";
+        const { Cube, Shader, ShaderInstance, PerspectiveCamera, Drawable } = graphics;
+        const { quat, vec3, mat4 } = glMatrix;
+        
         
         class MyFirstGame extends Game {
 
@@ -26,22 +29,45 @@
             }
 
             create() {
+                this.mesh = new Cube();
+                this.simpleShader = new Shader(Shader.SIMPLE_VS, Shader.SIMPLE_FS);
 
+                this.drawable = new Drawable(
+                    this.mesh,
+                    new ShaderInstance(this.simpleShader),
+                    null);
+
+                this.camera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height);
+                this.camera.position[2] = -5;
             }
 
             resize(width, height) {
-
+                this.camera.viewportWidth = width;
+                this.camera.viewportHeight = height;
+                this.camera.updateProjection();
             }
 
             render(delta) {
-                Gol.gl.clearColor(1, 0, 0, 1);
-                Gol.gl.clear(Gol.gl.COLOR_BUFFER_BIT);
+                const constants = {};
+
+                this.camera.updateConstants(constants);
+
+                quat.rotateX(this.drawable.rotation, this.drawable.rotation, -delta);
+                quat.rotateY(this.drawable.rotation, this.drawable.rotation, 2 * delta);
+
+                Gol.gl.viewport(0, 0, Gol.graphics.width, Gol.graphics.height);
+                Gol.gl.enable(Gol.gl.DEPTH_TEST);
+
+                Gol.gl.clearColor(0, 0, 0, 1);
+                Gol.gl.clear(Gol.gl.COLOR_BUFFER_BIT | Gol.gl.DEPTH_BUFFER_BIT);
+                
+                this.drawable.draw(constants);
             }
 
         }
 
         addEventListener("DOMContentLoaded", () => {
-            new MyFirstGame();
+            Gol.init(new MyFirstGame());
         });
     </script>
 </body>

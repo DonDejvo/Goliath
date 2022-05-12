@@ -1,5 +1,9 @@
+import { Files } from "./files.js";
 import { Game } from "./game.js";
-import { Graphics } from "./graphics/graphics.js";
+import { Graphics } from "./graphics.js";
+import * as graphics from "./graphics/_index.js";
+import { Input } from "./input.js";
+import * as glMatrix from "gl-matrix";
 
 class Gol {
 
@@ -9,9 +13,34 @@ class Gol {
      */
     static graphics;
 
-    static init(game) {
-        this.graphics = new Graphics(game);
+    /**
+     * 
+     * @type {Files}
+     */
+    static files;
 
+    /**
+     * 
+     * @type {Input}
+     */
+    static input;
+    
+    /**
+     * 
+     * @param {Game} game 
+     */
+    static async init(game) {
+        this.graphics = new Graphics(game);
+        this.files = new Files();
+        this.input = new Input();
+        
+        game.preload();
+        await this.files.waitForAssetsToLoad();
+
+        game.create();
+
+        addEventListener("resize", () => this.graphics.onResize());
+        this.graphics.onResize();
         this.graphics.onResume();
     }
 
@@ -23,5 +52,7 @@ class Gol {
 
 export {
     Gol,
-    Game
+    Game,
+    graphics,
+    glMatrix
 }

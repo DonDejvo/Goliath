@@ -1,11 +1,10 @@
-import { Gol } from "./gol.js";
-
-
-export class Game {
+class Game {
 
     constructor() {
-        Gol.init(this);
+        
     }
+
+    preload() {}
 
     create() {}
 
@@ -15,4 +14,8 @@ export class Game {
 
     render(delta) {}
 
+}
+
+export {
+    Game
 }

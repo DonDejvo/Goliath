@@ -1,6 +1,6 @@
-import { Game } from "../game.js";
+import { Game } from "./game.js";
 
-export class Graphics {
+class Graphics {
 
     /**
      * 
@@ -72,10 +72,9 @@ export class Graphics {
         this.game = game;
 
         this.canvas = this.createCanvas();
+        this.canvas.width = this.width = innerWidth;
+        this.canvas.height = this.height = innerHeight;
         this.gl = this.canvas.getContext("webgl");
-
-        addEventListener("resize", () => this.onResize());
-        this.onResize();
     }
 
     onResume() {
@@ -93,6 +92,8 @@ export class Graphics {
     onResize() {
         this.canvas.width = this.width = innerWidth;
         this.canvas.height = this.height = innerHeight;
+
+        this.game.resize(this.width, this.height);
     }
 
     onDrawFrame() {
@@ -102,12 +103,12 @@ export class Graphics {
 
         this.game.render(this.delta);
 
-        if (time - this.frameStart > 1000) {
+        if (time - this.frameStart >= 1000) {
 			this.fps = this.frames;
 			this.frames = 0;
 			this.frameStart = time;
 		}
-		this.frames++;
+		++this.frames;
     }
 
     RAF() {
@@ -117,4 +118,8 @@ export class Graphics {
         });
     }
 
+}
+
+export {
+    Graphics
 }
