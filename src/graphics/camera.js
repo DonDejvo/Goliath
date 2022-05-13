@@ -72,21 +72,36 @@ class Camera {
 
     lookAt(...args) {
         if(args.length == 1) {
+
             vec3.copy(this.tpmVec, args[0]);
+
         } else if(args.length == 3) {
+
             vec3.set(this.tpmVec, ...args);
+
         } else {
+
             throw new Error("Required 1 or 3 arguments");
+
         }
-        vec3.sub(this.tpmVec, this.position);
+
+        vec3.sub(this.tpmVec, this.tpmVec, this.position);
         vec3.normalize(this.tpmVec, this.tpmVec);
-        const dot = this.tpmVec.dot(this.up);
+
+        const dot = vec3.dot(this.tpmVec, this.up);
+
         if(glMatrix.equals(dot, 1)) {
+
             vec3.negate(this.up, this.direction);
+
         } else if(glMatrix.equals(dot, -1)) {
+
             vec3.copy(this.up, this.direction);
+
         }
+
         vec3.copy(this.direction, this.tpmVec);
+
         vec3.cross(this.up, this.getRight(), this.direction);
         vec3.normalize(this.up, this.up);
     }
