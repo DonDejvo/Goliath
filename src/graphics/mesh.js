@@ -6,9 +6,9 @@ class Mesh {
 
     /**
      * 
-     * @type { { name: string, size: number, data: number[], buffer: WebGLBuffer }[] }
+     * @type { Map<string, { size: number, data: number[], buffer: WebGLBuffer }> }
      */
-    buffers = [];
+    buffers = new Map();
 
     /**
      * 
@@ -16,7 +16,16 @@ class Mesh {
      */
     vertexCount = 0;
 
-    constructor() {
+    /**
+     * 
+     * @type {Object}
+     */
+    options;
+
+    constructor(opts = {}) {
+
+        this.options = opts;
+
         this.onInit();
     }
 
@@ -32,8 +41,12 @@ class Mesh {
             Gol.gl.bindBuffer(Gol.gl.ARRAY_BUFFER, buffer);
             Gol.gl.bufferData(Gol.gl.ARRAY_BUFFER, new Float32Array(data), Gol.gl.STATIC_DRAW);
         }
-        this.buffers.push({
-            name,
+
+        if(this.buffers.has(name)) {
+            Gol.gl.deleteBuffer(this.buffers.get(name).buffer);
+        }
+
+        this.buffers.set(name, {
             size,
             data,
             buffer
@@ -46,12 +59,12 @@ class Mesh {
      */
     bind(shader) {
 
-        for(let info of this.buffers) {
+        this.buffers.forEach((info, name) => {
 
-            const loc = shader.shaderData.attribs[info.name];
+            const loc = shader.shaderData.attribs[name];
 
             if(loc != -1) {
-                if (info.name == "index") {
+                if (name == "index") {
                     Gol.gl.bindBuffer(Gol.gl.ELEMENT_ARRAY_BUFFER, info.buffer);
                 } else {
                     Gol.gl.bindBuffer(Gol.gl.ARRAY_BUFFER, info.buffer);
@@ -59,7 +72,7 @@ class Mesh {
                     Gol.gl.enableVertexAttribArray(loc);
                 }
             }
-        }
+        });
     }
 
     draw() {

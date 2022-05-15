@@ -48,13 +48,16 @@ class Files {
 
     waitForAssetsToLoad() {
         return new Promise(resolve => {
-            if(this.toLoad == 0) {
-                resolve(this.assets);
-            } else {
-                setTimeout(() => {
-                    this.waitForAssetsToLoad();
-                }, 250);
+            const wait = () => {
+                if(this.toLoad == 0) {
+                    resolve(this.assets);
+                } else {
+                    setTimeout(() => {
+                        wait();
+                    }, 250);
+                }
             }
+            wait();
         });
     }
 

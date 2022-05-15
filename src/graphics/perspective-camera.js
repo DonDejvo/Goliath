@@ -10,11 +10,13 @@ class PerspectiveCamera extends Camera {
      */
     fov;
 
-    constructor(fov, viewportWidth, viewportHeight) {
+    constructor(fov, viewportWidth, viewportHeight, near, far) {
         super();
         this.fov = fov;
         this.viewportWidth = viewportWidth;
         this.viewportHeight = viewportHeight;
+        this.near = near;
+        this.far = far;
 
         this.updateProjection();
     }

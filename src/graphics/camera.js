@@ -6,13 +6,13 @@ class Camera {
      * 
      * @type {vec3}
      */
-    position = vec3.create();
+    position = vec3.fromValues(0, 0, -1);
 
     /**
      * 
      * @type {vec3}
      */
-    direction = vec3.fromValues(0, 0, 1);
+    direction = vec3.fromValues(0, 0, -1);
 
     /**
      * 
@@ -81,7 +81,7 @@ class Camera {
 
         } else {
 
-            throw new Error("Required 1 or 3 arguments");
+            throw new Error("required 1 or 3 arguments");
 
         }
 

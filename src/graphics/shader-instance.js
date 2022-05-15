@@ -17,6 +17,8 @@ class ShaderInstance {
 
     constructor(shader) {
         this.shaderData = shader;
+
+        this.setUniform("uvOffset", [0, 0]);
     }
 
     setUniform(name, val) {
@@ -28,11 +30,10 @@ class ShaderInstance {
     }
 
     bind(constants) {
-        for(let name in this.shaderData.uniforms) {
-            const info = this.shaderData.uniforms[name];
-            let value = constants[name];
-            if (this.uniforms.has(name)) {
-                value = this.uniforms.get(name);
+        for(let info of this.shaderData.uniforms) {
+            let value = constants[info.name];
+            if (this.uniforms.has(info.name)) {
+                value = this.uniforms.get(info.name);
             }
 
             if (value && info.location) {

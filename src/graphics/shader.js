@@ -35,44 +35,63 @@ class Shader {
             sizes: Gol.gl.getAttribLocation(this.program, "size")
         };
 
-        this.uniforms = {
-            projectionMatrix: {
+        this.uniforms = [
+            {
+                name: "projectionMatrix",
                 type: "mat4",
                 location: Gol.gl.getUniformLocation(this.program, "projectionMatrix")
             },
-            modelViewMatrix: {
+            {
+                name: "modelViewMatrix",
                 type: "mat4",
                 location: Gol.gl.getUniformLocation(this.program, "modelViewMatrix"),
             },
-            modelMatrix: {
+            {
+                name: "modelMatrix",
                 type: "mat4",
                 location: Gol.gl.getUniformLocation(this.program, "modelMatrix"),
             },
-            normalMatrix: {
+            {
+                name: "normalMatrix",
                 type: "mat3",
                 location: Gol.gl.getUniformLocation(this.program, "normalMatrix"),
             },
-            lightColor: {
+            {
+                name: "lightColor",
                 type: "vec3",
                 location: Gol.gl.getUniformLocation(this.program, "lightColor"),
             },
-            lightDirection: {
+            {
+                name: "lightDirection",
                 type: "vec3",
                 location: Gol.gl.getUniformLocation(this.program, "lightDirection"),
             },
-            lightPosition: {
+            {
+                name: "lightPosition",
                 type: "vec3",
                 location: Gol.gl.getUniformLocation(this.program, "lightPosition"),
             },
-            cameraPosition: {
+            {
+                name: "cameraPosition",
                 type: "vec3",
                 location: Gol.gl.getUniformLocation(this.program, "cameraPosition"),
             },
-            pointMultiplier: {
+            {
+                name: "pointMultiplier",
                 type: "float",
                 location: Gol.gl.getUniformLocation(this.program, "pointMultiplier")
+            },
+            {
+                name: "ambientColor",
+                type: "vec3",
+                location: Gol.gl.getUniformLocation(this.program, "ambientColor")
+            },
+            {
+                name: "uvOffset",
+                type: "vec2",
+                location: Gol.gl.getUniformLocation(this.program, "uvOffset")
             }
-        };
+        ];
     }
 
     activate() {
@@ -112,8 +131,10 @@ class Shader {
 
     varying vec4 vColor;
 
+    uniform vec3 ambientColor;
+
     void main(void) {
-        gl_FragColor = vColor;
+        gl_FragColor = vec4(vColor.rgb * ambientColor, vColor.a);
     }
     `;
 
@@ -142,9 +163,12 @@ class Shader {
     varying vec2 vUv;
 
     uniform sampler2D tex;
+    uniform vec3 ambientColor;
+    uniform vec2 uvOffset;
 
     void main(void) {
-        gl_FragColor = vColor * texture2D(tex, vUv);
+        vec4 texColor = texture2D(tex, vUv + uvOffset);
+        gl_FragColor = vec4(vColor.rgb * texColor.rgb * ambientColor, texColor.a);
     }
     `;
 
@@ -169,14 +193,14 @@ class Shader {
     static PARTICLE_FS = `
     precision mediump float;
     
-    uniform sampler2D tex;
-    
     varying vec4 vColor;
-    
+
+    uniform sampler2D tex;
+    uniform vec3 ambientColor;
     
     void main(void) {
         vec4 texColor = texture2D(tex, gl_PointCoord);
-        gl_FragColor = vec4(vColor.rgb * texColor.rgb * texColor.a, vColor.a);
+        gl_FragColor = vec4(vColor.rgb * texColor.rgb * ambientColor * texColor.a, vColor.a);
     }
     `;
 }

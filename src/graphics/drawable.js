@@ -41,6 +41,12 @@ class Drawable {
      */
      scale = vec3.fromValues(1, 1, 1);
 
+     /**
+      * 
+      * @type {Drawable}
+      */
+     parent = null;
+
     constructor(mesh, shader, texture) {
         this.mesh = mesh;
         this.shader = shader;
@@ -49,6 +55,10 @@ class Drawable {
 
     draw(constants) {
         this.shader.activate();
+
+        if(this.texture) {
+            this.texture.bind();
+        }
 
         const modelMatrix = mat4.create();
         mat4.fromRotationTranslationScale(

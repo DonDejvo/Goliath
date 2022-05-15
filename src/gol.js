@@ -4,6 +4,7 @@ import { Graphics } from "./graphics.js";
 import * as graphics from "./graphics/_index.js";
 import { Input } from "./input.js";
 import * as glMatrix from "gl-matrix";
+import * as math from "./math/_index.js";
 
 class Gol {
 
@@ -33,6 +34,11 @@ class Gol {
         this.graphics = new Graphics(game);
         this.files = new Files();
         this.input = new Input();
+
+        this.input.initEvents();
+
+        this.graphics.compileShaders();
+        this.graphics.generateFonts();
         
         game.preload();
         await this.files.waitForAssetsToLoad();
@@ -54,5 +60,6 @@ export {
     Gol,
     Game,
     graphics,
-    glMatrix
+    glMatrix,
+    math
 }

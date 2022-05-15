@@ -1,4 +1,7 @@
 import { Game } from "./game.js";
+import { Gol } from "./gol.js";
+import { Font } from "./graphics/font.js";
+import { Shader } from "./graphics/shader.js";
 
 class Graphics {
 
@@ -68,6 +71,18 @@ class Graphics {
      */
     game;
 
+    /**
+     * 
+     * @type {Map<string, Shader>}
+     */
+    shaders = new Map();
+
+    /**
+     * 
+     * @type {Map<string, Font>}
+     */
+    fonts = new Map();
+
     constructor(game) {
         this.game = game;
 
@@ -101,6 +116,8 @@ class Graphics {
         this.delta = (time - this.lastFrameTime) * 0.001;
         this.lastFrameTime = time;
 
+        Gol.input.update();
+
         this.game.render(this.delta);
 
         if (time - this.frameStart >= 1000) {
@@ -116,6 +133,38 @@ class Graphics {
             this.RAF();
             this.onDrawFrame();
         });
+    }
+
+    compileShaders() {
+
+        this.shaders.set("simple",
+            new Shader(Shader.SIMPLE_VS, Shader.SIMPLE_FS));
+
+        this.shaders.set("texture",
+            new Shader(Shader.TEXTURE_VS, Shader.TEXTURE_FS));
+
+        this.shaders.set("particle",
+            new Shader(Shader.PARTICLE_VS, Shader.PARTICLE_FS));
+
+    }
+
+    generateFonts() {
+
+        this.fonts.set("Consolas",
+            new Font({
+                fontFamily: "Consolas",
+                fontSize: 48,
+                charRatio: 0.6
+            }));
+
+    }
+
+    getShader(name) {
+        return this.shaders.get(name);
+    }
+
+    getFont(name) {
+        return this.fonts.get(name);
     }
 
 }

@@ -1,67 +1,327 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
         canvas {
-            position: absolute;
+            position: fixed;
+            left: 0;
+            top: 0;
         }
     </style>
 </head>
+
 <body>
     <script type="module">
-        import { Gol, Game, graphics, glMatrix } from "../../dist/goliath.js";
-        const { Cube, Shader, ShaderInstance, PerspectiveCamera, Drawable } = graphics;
+        import { Gol, Game, graphics, glMatrix, math } from "../../dist/goliath.js";
+        const { Shader, ShaderInstance, PerspectiveCamera, OrthographicCamera, Drawable, Texture, Sprite, TextDrawable, ParticleSystem } = graphics;
+        const { Quad, Cube, Plane } = graphics.meshes;
         const { quat, vec3, mat4 } = glMatrix;
-        
-        
+        const { MathUtils, LinearSpline } = math;
+
+        class FireParticleSystem extends ParticleSystem {
+
+            constructor(params) {
+                super(params);
+
+                this.accTime = 0;
+                this.parent = params.parent;
+                this.camera = params.camera;
+
+                this.shader.setUniform("pointMultiplier", Gol.graphics.height * 0.28);
+
+                this.sizeSpline = new LinearSpline(MathUtils.lerp);
+                this.sizeSpline.addPoint(0.0, 1.0);
+                this.sizeSpline.addPoint(0.5, 5.0);
+                this.sizeSpline.addPoint(1.0, 10.0);
+
+                this.alphaSpline = new LinearSpline(MathUtils.lerp);
+                this.alphaSpline.addPoint(0.0, 0.0);
+                this.alphaSpline.addPoint(0.1, 1.0);
+                this.alphaSpline.addPoint(0.6, 1.0);
+                this.alphaSpline.addPoint(1.0, 0.0);
+
+                this.colorSpline = new LinearSpline((x, a, b) => vec3.lerp(vec3.create(), a, b, x));
+                this.colorSpline.addPoint(0.0, [1, 1, 0.5]);
+                this.colorSpline.addPoint(1.0, [1, 0.5, 0.5]);
+            }
+
+            addParticles() {
+
+                const delta = Gol.graphics.delta;
+
+                this.accTime += delta;
+
+                const n = this.accTime * 50;
+
+                this.accTime -= n / 50;
+
+                for (let i = 0; i < n; ++i) {
+                    const life = MathUtils.rand(0.25, 1) * 2;
+                    const pos = [
+                        MathUtils.rand(-1, 1) * 1,
+                        MathUtils.rand(-1, 1) * 1 - this.parent.scale[1] * 0.4,
+                        MathUtils.rand(-1, 1) * 1
+                    ];
+                    vec3.add(pos, pos, this.parent.position);
+                    const vel = [0, -10, 0];
+                    const m = mat4.fromQuat(mat4.create(), this.parent.rotation);
+                    vec3.transformMat4(pos, pos, m);
+                    vec3.add(pos, pos, this.parent.position)
+                    this.particles.push({
+                        position: pos,
+                        baseSize: MathUtils.rand(0.5, 1) * 4,
+                        life: life,
+                        maxLife: life,
+                        velocity: vec3.transformMat4(vel, vel, m),
+                        alpha: 1,
+                        color: [1, 1, 1]
+                    });
+                }
+            }
+
+            updateParticles() {
+
+                const delta = Gol.graphics.delta;
+
+                for (let p of this.particles) {
+                    p.life -= delta;
+                }
+
+                this.particles = this.particles.filter(p => p.life > 0);
+
+                for (let p of this.particles) {
+                    const t = 1.0 - p.life / p.maxLife;
+
+                    p.size = p.baseSize * this.sizeSpline.getValue(t);
+                    p.alpha = this.alphaSpline.getValue(t);
+                    vec3.copy(p.color, this.colorSpline.getValue(t));
+
+                    vec3.scaleAndAdd(p.position, p.position, p.velocity, delta);
+
+                    const drag = vec3.clone(p.velocity);
+                    vec3.scale(drag, drag, delta * 0.1);
+                    drag[1] = Math.sign(p.velocity[1]) * Math.min(Math.abs(drag[1]), Math.abs(p.velocity[1]));
+                    vec3.sub(p.velocity, p.velocity, drag);
+                }
+
+                this.particles.sort((a, b) => {
+                    const d1 = vec3.dist(this.camera.position, a.position);
+                    const d2 = vec3.dist(this.camera.position, b.position);
+                    return d2 - d1;
+                });
+
+            }
+
+        }
+
+
         class MyFirstGame extends Game {
 
             constructor() {
                 super();
             }
 
+            preload() {
+                Gol.files.loadImage("player", "player.png");
+                Gol.files.loadImage("grass-block", "grass-block.png");
+                Gol.files.loadImage("fire", "fire.png");
+                Gol.files.loadImage("ground", "ground.png");
+            }
+
             create() {
-                this.mesh = new Cube();
-                this.simpleShader = new Shader(Shader.SIMPLE_VS, Shader.SIMPLE_FS);
+
+                this.myText = new TextDrawable(Gol.graphics.getFont("Consolas"), "Goliath is better than Three.js", true);
+                this.myText.scale[0] = this.myText.scale[1] = 18;
+                this.myText.position[0] = 180;
+                this.myText.position[1] = 40;
+
+                this.cube = new Cube({
+                    colors: [...new Array(6)].map((item, i) => {
+                        const v = 1 - i * 0.1;
+                        return [v, v, v, 1];
+                    }),
+                    textureFaces: "multiple"
+                });
+                this.playerTexture = new Texture(Gol.files.get("player"), {
+                    filter: Gol.gl.NEAREST
+                });
+                this.myTexture = new Texture(new ImageData(new Uint8ClampedArray([
+                    25, 25, 25, 255,
+                    255, 255, 255, 255,
+                    255, 255, 255, 255,
+                    25, 25, 25, 255,
+                ]), 2, 2),
+                    {
+                        filter: Gol.gl.NEAREST,
+                        wrap: Gol.gl.REPEAT
+                    });
+                this.grassTexture = new Texture(Gol.files.get("grass-block"), {
+                    filter: Gol.gl.NEAREST
+                });
 
                 this.drawable = new Drawable(
-                    this.mesh,
-                    new ShaderInstance(this.simpleShader),
-                    null);
+                    this.cube,
+                    new ShaderInstance(Gol.graphics.getShader("texture")),
+                    this.grassTexture);
+                const cubeUvs = [];
+                for (let i = 0; i < 6; ++i) {
+                    cubeUvs.push(
+                        0, 0,
+                        8, 0,
+                        8, 8,
+                        0, 8
+                    );
+                }
+                //this.drawable.mesh.bufferData(cubeUvs, 2, "uvs");
+                //this.drawable.shader.setUniform("ambientColor", [1, 0, 0]);
+                this.drawable.position[1] = 2;
 
-                this.camera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height);
-                this.camera.position[2] = -5;
+                this.camera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height, 0.1, 100);
+                this.camera.position[2] = 5;
+
+                this.controlsCamera = new OrthographicCamera(360, 240);
+
+                this.button = new Sprite(
+                    this.playerTexture,
+                    16, 16
+                );
+                this.button.shader.setUniform("ambientColor", [0, 1, 0]);
+
+                this.button.position = [24, 24, 0];
+                this.button.scale = [40, 40, 1];
+
+                quat.rotateY(this.drawable.rotation, this.drawable.rotation, Math.PI * -0.0);
+
+                this.ps = new FireParticleSystem({
+                    texture: new Texture(Gol.files.get("fire")),
+                    parent: this.drawable,
+                    camera: this.camera
+                });
+
+                this.mouse = {
+                    x: null,
+                    y: null
+                };
+
+                const widthSegments = 60;
+                const depthSegments = 60;
+                const heightMap = [...new Array(depthSegments + 1)].map(e => [...new Array(widthSegments + 1)].fill(0));
+                for(let i = 0; i < 30; ++i) {
+                    const x = MathUtils.randInt(0, widthSegments);
+                    const z = MathUtils.randInt(0, depthSegments);
+                    const h = MathUtils.rand(-2, 2);
+                    for(let j = 0; j <= depthSegments; ++j) {
+                        for(let k = 0; k <= widthSegments; ++k) {
+                            const dist = Math.hypot(j - z, k - x);
+                            heightMap[j][k] += Math.sign(h) * Math.abs(h / (2 ** dist));
+                        }
+                    }
+                }
+
+                this.plane = new Drawable(
+                    new Plane({
+                        width: 30,
+                        depth: 30,
+                        widthSegments: widthSegments,
+                        depthSegments: depthSegments,
+                        heightMap: heightMap,
+                        textureRepeat: true
+                    }),
+                    new ShaderInstance(Gol.graphics.getShader("texture")),
+                    new Texture(Gol.files.get("ground"), {
+                        filter: Gol.gl.LINEAR_MIPMAP_LINEAR
+                    })
+                );
+                this.plane.position[1] = -1.5;
             }
 
             resize(width, height) {
                 this.camera.viewportWidth = width;
                 this.camera.viewportHeight = height;
                 this.camera.updateProjection();
+                this.ps.shader.setUniform("pointMultiplier", height * 0.28);
             }
 
             render(delta) {
-                const constants = {};
+
+                if(Gol.input.isMouseClicked()) {
+                    this.mouse.x = Gol.input.getX();
+                    this.mouse.y = Gol.input.getY();
+                }
+                if(Gol.input.isMousePressed()) {
+                    const x = Gol.input.getX();
+                    const y = Gol.input.getY();
+                    vec3.rotateY(this.camera.direction, this.camera.direction, this.camera.up, (this.mouse.x - x) * 0.005);
+                    this.camera.direction[1] += (this.mouse.y - y) * 0.005;
+                    this.mouse.x = x;
+                    this.mouse.y = y;
+                }
+
+                const translation = vec3.create();
+
+                if(Gol.input.isKeyPressed("KeyW")) {
+                    const front = this.camera.direction;
+                    vec3.add(translation, translation, [front[0], 0, front[2]]);
+                }
+
+                if(Gol.input.isKeyPressed("KeyS")) {
+                    const front = this.camera.direction;
+                    vec3.add(translation, translation, [-front[0], 0, -front[2]]);
+                }
+
+                if(Gol.input.isKeyPressed("KeyA")) {
+                    const right = this.camera.getRight();
+                    vec3.add(translation, translation, [-right[0], 0, -right[2]]);
+                }
+
+                if(Gol.input.isKeyPressed("KeyD")) {
+                    const right = this.camera.getRight();
+                    vec3.add(translation, translation, [right[0], 0, right[2]]);
+                }
+
+                vec3.scaleAndAdd(this.camera.position, this.camera.position, translation, delta * 5);
+
+                const constants = {
+                    "ambientColor": [1, 1, 1]
+                };
 
                 this.camera.updateConstants(constants);
 
-                quat.rotateX(this.drawable.rotation, this.drawable.rotation, -delta);
-                quat.rotateY(this.drawable.rotation, this.drawable.rotation, 2 * delta);
+                quat.rotateY(this.drawable.rotation, this.drawable.rotation, -delta);
+                quat.rotateX(this.drawable.rotation, this.drawable.rotation, 2 * delta);
+
+                const controlsConstants = {
+                    "ambientColor": [1, 1, 1]
+                };
+
+                //this.controlsCamera.position[0] -= delta * 10;
+                this.controlsCamera.updateConstants(controlsConstants);
+
+                this.ps.update();
 
                 Gol.gl.viewport(0, 0, Gol.graphics.width, Gol.graphics.height);
-                Gol.gl.enable(Gol.gl.DEPTH_TEST);
 
                 Gol.gl.clearColor(0, 0, 0, 1);
                 Gol.gl.clear(Gol.gl.COLOR_BUFFER_BIT | Gol.gl.DEPTH_BUFFER_BIT);
-                
+
+                Gol.gl.enable(Gol.gl.DEPTH_TEST);
+
+                Gol.gl.disable(Gol.gl.BLEND);
+
                 this.drawable.draw(constants);
+
+                this.plane.draw(constants);
+
+                Gol.gl.enable(Gol.gl.BLEND);
+
+                Gol.gl.blendFunc(Gol.gl.ONE, Gol.gl.ONE);
+                this.ps.draw(constants);
+
             }
 
         }
@@ -71,4 +331,5 @@
         });
     </script>
 </body>
+
 </html>
