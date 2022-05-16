@@ -59,7 +59,7 @@ class Plane extends Mesh {
             }
         }
 
-        if (!Array.isArray(this.options.colors)) {
+        if (this.options.colors === undefined) {
 
             for (let i = 0; i < widthSegments * depthSegments * 16; ++i) {
                 colors.push(1);
@@ -75,7 +75,7 @@ class Plane extends Mesh {
 
         } else {
 
-            throw new Error("options.colors requires 1 or 4 elements");
+            throw new Error("options.colors requires 1 elements");
         }
 
         this.bufferData(positions, 3, "positions");

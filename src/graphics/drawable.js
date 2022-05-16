@@ -84,6 +84,8 @@ class Drawable {
         this.mesh.bind(this.shader);
 
         this.mesh.draw();
+
+        this.mesh.unbind(this.shader);
     }
 
 }

@@ -200,7 +200,11 @@ class Shader {
     
     void main(void) {
         vec4 texColor = texture2D(tex, gl_PointCoord);
-        gl_FragColor = vec4(vColor.rgb * texColor.rgb * ambientColor * texColor.a, vColor.a);
+        gl_FragColor = vec4(vColor.rgb * texColor.rgb * ambientColor * texColor.a, texColor.a);
+        gl_FragColor *= vColor.a;
+        if(gl_FragColor.a == 0.0) {
+            discard;
+        }
     }
     `;
 }

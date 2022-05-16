@@ -19,7 +19,7 @@
     <script type="module">
         import { Gol, Game, graphics, glMatrix, math } from "../../dist/goliath.js";
         const { Shader, ShaderInstance, PerspectiveCamera, OrthographicCamera, Drawable, Texture, Sprite, TextDrawable, ParticleSystem } = graphics;
-        const { Quad, Cube, Plane } = graphics.meshes;
+        const { Quad, Cube, Plane, Sphere } = graphics.meshes;
         const { quat, vec3, mat4 } = glMatrix;
         const { MathUtils, LinearSpline } = math;
 
@@ -56,19 +56,17 @@
 
                 this.accTime += delta;
 
-                const n = this.accTime * 50;
-
+                const n = Math.floor(this.accTime * 50);
                 this.accTime -= n / 50;
 
                 for (let i = 0; i < n; ++i) {
                     const life = MathUtils.rand(0.25, 1) * 2;
                     const pos = [
                         MathUtils.rand(-1, 1) * 1,
-                        MathUtils.rand(-1, 1) * 1 - this.parent.scale[1] * 0.4,
+                        MathUtils.rand(-1, 1) * 1,
                         MathUtils.rand(-1, 1) * 1
                     ];
-                    vec3.add(pos, pos, this.parent.position);
-                    const vel = [0, -10, 0];
+                    const vel = [0, 15, 0];
                     const m = mat4.fromQuat(mat4.create(), this.parent.rotation);
                     vec3.transformMat4(pos, pos, m);
                     vec3.add(pos, pos, this.parent.position)
@@ -78,8 +76,8 @@
                         life: life,
                         maxLife: life,
                         velocity: vec3.transformMat4(vel, vel, m),
-                        alpha: 1,
-                        color: [1, 1, 1]
+                        color: [1, 1, 1],
+                        alpha: 0.1
                     });
                 }
             }
@@ -95,10 +93,10 @@
                 this.particles = this.particles.filter(p => p.life > 0);
 
                 for (let p of this.particles) {
-                    const t = 1.0 - p.life / p.maxLife;
+                    const t = 1 - p.life / p.maxLife;
 
-                    p.size = p.baseSize * this.sizeSpline.getValue(t);
                     p.alpha = this.alphaSpline.getValue(t);
+                    p.size = p.baseSize * this.sizeSpline.getValue(t);
                     vec3.copy(p.color, this.colorSpline.getValue(t));
 
                     vec3.scaleAndAdd(p.position, p.position, p.velocity, delta);
@@ -160,14 +158,14 @@
                         filter: Gol.gl.NEAREST,
                         wrap: Gol.gl.REPEAT
                     });
-                this.grassTexture = new Texture(Gol.files.get("grass-block"), {
-                    filter: Gol.gl.NEAREST
-                });
+                this.grassTexture = new Texture(Gol.files.get("ground"), {
+                        filter: Gol.gl.LINEAR_MIPMAP_LINEAR
+                    })
 
                 this.drawable = new Drawable(
                     this.cube,
                     new ShaderInstance(Gol.graphics.getShader("texture")),
-                    this.grassTexture);
+                    this.myTexture);
                 const cubeUvs = [];
                 for (let i = 0; i < 6; ++i) {
                     cubeUvs.push(
@@ -177,11 +175,11 @@
                         0, 8
                     );
                 }
-                //this.drawable.mesh.bufferData(cubeUvs, 2, "uvs");
+                this.drawable.mesh.bufferData(cubeUvs, 2, "uvs");
                 //this.drawable.shader.setUniform("ambientColor", [1, 0, 0]);
                 this.drawable.position[1] = 2;
 
-                this.camera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height, 0.1, 100);
+                this.camera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height, 0.1, 1000);
                 this.camera.position[2] = 5;
 
                 this.controlsCamera = new OrthographicCamera(360, 240);
@@ -211,10 +209,10 @@
                 const widthSegments = 60;
                 const depthSegments = 60;
                 const heightMap = [...new Array(depthSegments + 1)].map(e => [...new Array(widthSegments + 1)].fill(0));
-                for(let i = 0; i < 30; ++i) {
+                for(let i = 0; i < 60; ++i) {
                     const x = MathUtils.randInt(0, widthSegments);
                     const z = MathUtils.randInt(0, depthSegments);
-                    const h = MathUtils.rand(-2, 2);
+                    const h = MathUtils.rand(0, 3);
                     for(let j = 0; j <= depthSegments; ++j) {
                         for(let k = 0; k <= widthSegments; ++k) {
                             const dist = Math.hypot(j - z, k - x);
@@ -225,8 +223,8 @@
 
                 this.plane = new Drawable(
                     new Plane({
-                        width: 30,
-                        depth: 30,
+                        width: 90,
+                        depth: 90,
                         widthSegments: widthSegments,
                         depthSegments: depthSegments,
                         heightMap: heightMap,
@@ -306,22 +304,20 @@
 
                 Gol.gl.viewport(0, 0, Gol.graphics.width, Gol.graphics.height);
 
-                Gol.gl.clearColor(0, 0, 0, 1);
+                Gol.gl.clearColor(0.05, 0.1, 0.3, 1);
                 Gol.gl.clear(Gol.gl.COLOR_BUFFER_BIT | Gol.gl.DEPTH_BUFFER_BIT);
 
                 Gol.gl.enable(Gol.gl.DEPTH_TEST);
-
                 Gol.gl.disable(Gol.gl.BLEND);
 
-                this.drawable.draw(constants);
-
                 this.plane.draw(constants);
+                
+                this.drawable.draw(constants);
 
                 Gol.gl.enable(Gol.gl.BLEND);
 
-                Gol.gl.blendFunc(Gol.gl.ONE, Gol.gl.ONE);
+                Gol.gl.blendFunc(Gol.gl.ONE, Gol.gl.ONE_MINUS_SRC_ALPHA);
                 this.ps.draw(constants);
-
             }
 
         }

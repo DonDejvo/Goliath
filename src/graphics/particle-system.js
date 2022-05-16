@@ -75,6 +75,8 @@ class ParticleSystem {
         const vertCount = this.particles.length;
 
         Gol.gl.drawArrays(Gol.gl.POINTS, 0, vertCount);
+
+        this.mesh.unbind(this.shader);
     }
 
     update() {

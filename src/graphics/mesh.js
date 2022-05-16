@@ -79,6 +79,19 @@ class Mesh {
         Gol.gl.drawElements(Gol.gl.TRIANGLES, this.vertexCount, Gol.gl.UNSIGNED_SHORT, 0);
     }
 
+    unbind(shader) {
+        this.buffers.forEach((info, name) => {
+
+            const loc = shader.shaderData.attribs[name];
+
+            if(loc != -1) {
+                if (name != "index") {
+                    Gol.gl.disableVertexAttribArray(loc);
+                }
+            }
+        });
+    }
+
 }
 
 export {

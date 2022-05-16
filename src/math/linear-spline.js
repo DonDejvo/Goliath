@@ -21,7 +21,7 @@ class LinearSpline {
         let idx1 = 0;
 
         for(let i = 0; i < this.points.length; ++i) {
-            if(t >= this.points[i][0]) {
+            if(t < this.points[i][0]) {
                 break;
             }
             idx1 = i;

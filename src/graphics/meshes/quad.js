@@ -23,7 +23,7 @@ class Quad extends Mesh {
 
         const colors = [];
 
-        if(!Array.isArray(this.options.colors)) {
+        if(this.options.colors === undefined) {
 
            for(let i = 0; i < 16; ++i) {
                colors.push(1);
