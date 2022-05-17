@@ -100,6 +100,10 @@ class Graphics {
 
     createCanvas() {
         const canvas = document.createElement("canvas");
+        canvas.oncontextmenu = (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+        }
         document.body.appendChild(canvas);
         return canvas;
     }

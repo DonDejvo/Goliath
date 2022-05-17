@@ -168,7 +168,7 @@ class Shader {
 
     void main(void) {
         vec4 texColor = texture2D(tex, vUv + uvOffset);
-        gl_FragColor = vec4(vColor.rgb * texColor.rgb * ambientColor, texColor.a);
+        gl_FragColor = vec4(vColor.rgb * texColor.rgb * ambientColor, texColor.a * vColor.a);
     }
     `;
 
