@@ -20,7 +20,7 @@
         import { Gol, Game, graphics, glMatrix, math } from "../../dist/goliath.js";
         const { Shader, ShaderInstance, PerspectiveCamera, OrthographicCamera, Drawable, Texture, Sprite, TextDrawable, ParticleSystem } = graphics;
         const { Quad, Cube, Plane, Sphere } = graphics.meshes;
-        const { quat, vec3, mat4 } = glMatrix;
+        const { quat, vec3, vec4, mat4 } = glMatrix;
         const { MathUtils, LinearSpline } = math;
 
         class FireParticleSystem extends ParticleSystem {
@@ -129,90 +129,29 @@
                 Gol.files.loadImage("grass-block", "grass-block.png");
                 Gol.files.loadImage("fire", "fire.png");
                 Gol.files.loadImage("ground", "ground.png");
+                Gol.files.loadAudio("bgmusic", "bgmusic.mp3");
             }
 
             create() {
 
-                this.myText = new TextDrawable(Gol.graphics.getFont("Consolas"), "Goliath is better than Three.js", true);
-                this.myText.scale[0] = this.myText.scale[1] = 18;
-                this.myText.position[0] = 180;
-                this.myText.position[1] = 40;
+                Gol.audio.playBgMusic("bgmusic");
 
-                this.cube = new Cube({
-                    colors: [...new Array(6)].map((item, i) => {
-                        const v = 1 - i * 0.1;
-                        return [v, v, v, 1];
-                    }),
-                    textureFaces: "multiple"
-                });
-                this.playerTexture = new Texture(Gol.files.get("player"), {
-                    filter: Gol.gl.NEAREST
-                });
-                this.myTexture = new Texture(new ImageData(new Uint8ClampedArray([
-                    25, 25, 25, 255,
-                    255, 255, 255, 255,
-                    255, 255, 255, 255,
-                    25, 25, 25, 255,
-                ]), 2, 2),
-                    {
-                        filter: Gol.gl.NEAREST,
-                        wrap: Gol.gl.REPEAT
-                    });
-                this.grassTexture = new Texture(Gol.files.get("ground"), {
-                        filter: Gol.gl.LINEAR_MIPMAP_LINEAR
-                    })
-
-                this.drawable = new Drawable(
-                    this.cube,
-                    new ShaderInstance(Gol.graphics.getShader("texture")),
-                    this.myTexture);
-                const cubeUvs = [];
-                for (let i = 0; i < 6; ++i) {
-                    cubeUvs.push(
-                        0, 0,
-                        8, 0,
-                        8, 8,
-                        0, 8
-                    );
-                }
-                this.drawable.mesh.bufferData(cubeUvs, 2, "uvs");
-                //this.drawable.shader.setUniform("ambientColor", [1, 0, 0]);
-                this.drawable.position[1] = 2;
-
-                this.camera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height, 0.1, 1000);
+                this.camera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height, 0.1, 2000);
+                this.camera.position[1] = 2;
                 this.camera.position[2] = 5;
-
-                this.controlsCamera = new OrthographicCamera(360, 240);
-
-                this.button = new Sprite(
-                    this.playerTexture,
-                    16, 16
-                );
-                this.button.shader.setUniform("ambientColor", [0, 1, 0]);
-
-                this.button.position = [24, 24, 0];
-                this.button.scale = [40, 40, 1];
-
-                quat.rotateY(this.drawable.rotation, this.drawable.rotation, Math.PI * -0.0);
-
-                this.ps = new FireParticleSystem({
-                    texture: new Texture(Gol.files.get("fire")),
-                    parent: this.drawable,
-                    camera: this.camera
-                });
 
                 this.mouse = {
                     x: null,
                     y: null
                 };
 
-                const widthSegments = 60;
-                const depthSegments = 60;
+                const widthSegments = 100;
+                const depthSegments = 100;
                 const heightMap = [...new Array(depthSegments + 1)].map(e => [...new Array(widthSegments + 1)].fill(0));
-                for(let i = 0; i < 60; ++i) {
+                for(let i = 0; i < 100; ++i) {
                     const x = MathUtils.randInt(0, widthSegments);
                     const z = MathUtils.randInt(0, depthSegments);
-                    const h = MathUtils.rand(0, 3);
+                    const h = MathUtils.rand(0, 20);
                     for(let j = 0; j <= depthSegments; ++j) {
                         for(let k = 0; k <= widthSegments; ++k) {
                             const dist = Math.hypot(j - z, k - x);
@@ -221,28 +160,41 @@
                     }
                 }
 
+                this.groundTexture = new Texture(Gol.files.get("ground"), {
+                        filter: Gol.gl.LINEAR_MIPMAP_LINEAR
+                    });
+
                 this.plane = new Drawable(
                     new Plane({
-                        width: 90,
-                        depth: 90,
+                        width: 500,
+                        depth: 500,
                         widthSegments: widthSegments,
                         depthSegments: depthSegments,
                         heightMap: heightMap,
                         textureRepeat: true
                     }),
                     new ShaderInstance(Gol.graphics.getShader("texture")),
-                    new Texture(Gol.files.get("ground"), {
-                        filter: Gol.gl.LINEAR_MIPMAP_LINEAR
-                    })
+                    this.groundTexture
                 );
-                this.plane.position[1] = -1.5;
+
+                const colorSpline = new LinearSpline((x, a, b) => vec4.lerp(vec4.create(), a, b, x));
+                colorSpline.addPoint(0, [0, 0.7, 0.8, 1]);
+                colorSpline.addPoint(0.5, [0.8, 0.95, 0.95, 1]);
+
+                this.sphere = new Drawable(
+                    new Sphere({
+                        radius: 1000,
+                        colors: colorSpline
+                    }),
+                    new ShaderInstance(Gol.graphics.getShader("simple")),
+                    null
+                );
             }
 
             resize(width, height) {
                 this.camera.viewportWidth = width;
                 this.camera.viewportHeight = height;
                 this.camera.updateProjection();
-                this.ps.shader.setUniform("pointMultiplier", height * 0.28);
             }
 
             render(delta) {
@@ -290,34 +242,16 @@
 
                 this.camera.updateConstants(constants);
 
-                quat.rotateY(this.drawable.rotation, this.drawable.rotation, -delta);
-                quat.rotateX(this.drawable.rotation, this.drawable.rotation, 2 * delta);
-
-                const controlsConstants = {
-                    "ambientColor": [1, 1, 1]
-                };
-
-                //this.controlsCamera.position[0] -= delta * 10;
-                this.controlsCamera.updateConstants(controlsConstants);
-
-                this.ps.update();
-
                 Gol.gl.viewport(0, 0, Gol.graphics.width, Gol.graphics.height);
 
-                Gol.gl.clearColor(0.05, 0.1, 0.3, 1);
+                Gol.gl.clearColor(0, 0, 0, 1);
                 Gol.gl.clear(Gol.gl.COLOR_BUFFER_BIT | Gol.gl.DEPTH_BUFFER_BIT);
 
                 Gol.gl.enable(Gol.gl.DEPTH_TEST);
                 Gol.gl.disable(Gol.gl.BLEND);
 
                 this.plane.draw(constants);
-                
-                this.drawable.draw(constants);
-
-                Gol.gl.enable(Gol.gl.BLEND);
-
-                Gol.gl.blendFunc(Gol.gl.ONE, Gol.gl.ONE_MINUS_SRC_ALPHA);
-                this.ps.draw(constants);
+                this.sphere.draw(constants);
             }
 
         }

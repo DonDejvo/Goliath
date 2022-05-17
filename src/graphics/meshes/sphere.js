@@ -1,4 +1,5 @@
 import { vec4 } from "gl-matrix";
+import { LinearSpline } from "../../math/linear-spline.js";
 import { Mesh } from "../mesh.js";
 
 class Sphere extends Mesh {
@@ -46,6 +47,17 @@ class Sphere extends Mesh {
 
             for (let i = 0; i < (widthSegments + 1) * (heightSegments + 1); ++i) {
                 colorCache.push([1, 1, 1, 1]);
+            }
+
+        } else if(this.options.colors instanceof LinearSpline) {
+
+            for(let i = 0; i <= heightSegments; ++i) {
+
+                const c = this.options.colors.getValue(i / heightSegments);
+
+                for(let j = 0; j <= widthSegments; ++j) {
+                    colorCache.push(c);
+                }
             }
 
         } else if (this.options.colors.length == 1) {

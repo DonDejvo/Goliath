@@ -1,9 +1,10 @@
+import { Gol } from "./gol";
 
 class Files {
 
     /**
      * 
-     * @type {Map<string, HTMLImageElement | HTMLAudioElement>}
+     * @type {Map<string, HTMLImageElement | HTMLAudioElement | AudioBuffer>}
      */
     assets = new Map();
 
@@ -27,13 +28,8 @@ class Files {
     }
 
     loadAudio(name, url) {
-        const audio = new Audio(url);
-        audio.load();
-        const promise = new Promise(resolve => {
-            audio.oncanplaythrough = () => {
-                resolve(audio);
-            }
-        });
+        const promise = fetch(url)
+            .then(response => response.arrayBuffer()).then(data => Gol.audio.audioContext.decodeAudioData(data));
         this.addAsync(name, promise);
         return promise;
     }

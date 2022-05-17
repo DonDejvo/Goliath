@@ -5,6 +5,9 @@ import * as graphics from "./graphics/_index.js";
 import { Input } from "./input.js";
 import * as glMatrix from "gl-matrix";
 import * as math from "./math/_index.js";
+import { AudioManager } from "./audio-manager.js";
+import { Device } from "./device.js";
+import { Screen } from "./screen.js";
 
 class Gol {
 
@@ -25,6 +28,18 @@ class Gol {
      * @type {Input}
      */
     static input;
+
+    /**
+     * 
+     * @type {AudioManager}
+     */
+    static audio;
+
+    /**
+     * 
+     * @type {Device}
+     */
+    static device;
     
     /**
      * 
@@ -34,6 +49,12 @@ class Gol {
         this.graphics = new Graphics(game);
         this.files = new Files();
         this.input = new Input();
+        this.audio = new AudioManager();
+        this.device = new Device();
+
+        for(let eventType of ["mousedown", "touchdown", "keydown"]) {
+            addEventListener(eventType, () => this.audio.onResume());
+        }
 
         this.input.initEvents();
 
@@ -61,5 +82,6 @@ export {
     Game,
     graphics,
     glMatrix,
-    math
+    math,
+    Screen
 }
