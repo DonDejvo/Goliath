@@ -95,6 +95,7 @@ class MainScreen extends Screen {
             new ShaderInstance(Gol.graphics.getShader("simple")),
             null
         );
+        this.sky.matrixAutoUpdate = false;
     }
 
     createGround() {
@@ -118,6 +119,7 @@ class MainScreen extends Screen {
                 new ShaderInstance(Gol.graphics.getShader("texture")),
                 y == 0 ? this.grassTexture : this.dirtTexture
             );
+            block.matrixAutoUpdate = false;
             vec3.set(block.position,
                 x,
                 y,
@@ -169,6 +171,7 @@ class MainScreen extends Screen {
                 new ShaderInstance(Gol.graphics.getShader("texture")),
                 tex
             );
+            block.matrixAutoUpdate = false;
             vec3.set(block.position,
                 x,
                 y,

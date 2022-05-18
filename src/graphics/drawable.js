@@ -47,6 +47,30 @@ class Drawable {
       */
      parent = null;
 
+     /**
+      * 
+      * @type {mat4}
+      */
+     modelMatrix = mat4.create();
+
+     /**
+      * 
+      * @type {mat4}
+      */
+      normalMatrix = mat4.create();
+    
+     /**
+      * 
+      * @type {boolean}
+      */
+     matrixAutoUpdate = true;
+
+     /**
+      * 
+      * @type {boolean}
+      */
+     matrixNeedsUpdate = true;
+
     constructor(mesh, shader, texture) {
         this.mesh = mesh;
         this.shader = shader;
@@ -60,25 +84,27 @@ class Drawable {
             this.texture.bind();
         }
 
-        const modelMatrix = mat4.create();
-        mat4.fromRotationTranslationScale(
-            modelMatrix,
-            this.rotation,
-            this.position,
-            this.scale);
+        if(this.matrixNeedsUpdate || this.matrixAutoUpdate) {
+            this.matrixNeedsUpdate = false;
+
+            mat4.fromRotationTranslationScale(
+                this.modelMatrix,
+                this.rotation,
+                this.position,
+                this.scale);
+
+            mat3.fromMat4(this.normalMatrix, this.modelMatrix);
+            mat3.invert(this.normalMatrix, this.normalMatrix);
+            mat3.transpose(this.normalMatrix, this.normalMatrix);
+        }
 
         const viewMatrix = constants.viewMatrix;
         const modelViewMatrix = mat4.create();
-        mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
-
-        const normalMatrix = mat3.create();
-        mat3.fromMat4(normalMatrix, modelMatrix);
-        mat3.invert(normalMatrix, normalMatrix);
-        mat3.transpose(normalMatrix, normalMatrix);
+        mat4.multiply(modelViewMatrix, viewMatrix, this.modelMatrix);
 
         this.shader.setUniform("modelViewMatrix", modelViewMatrix);
-        this.shader.setUniform("modelMatrix", modelMatrix);
-        this.shader.setUniform("normalMatrix", normalMatrix);
+        this.shader.setUniform("modelMatrix", this.modelMatrix);
+        this.shader.setUniform("normalMatrix", this.normalMatrix);
 
         this.shader.bind(constants);
         this.mesh.bind(this.shader);
