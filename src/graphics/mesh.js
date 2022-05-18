@@ -12,6 +12,12 @@ class Mesh {
 
     /**
      * 
+     * @type {WebGLBuffer[]}
+     */
+    buffersToDelete = [];
+
+    /**
+     * 
      * @type {number}
      */
     vertexCount = 0;
@@ -43,7 +49,7 @@ class Mesh {
         }
 
         if(this.buffers.has(name)) {
-            Gol.gl.deleteBuffer(this.buffers.get(name).buffer);
+            this.buffersToDelete.push(this.buffers.get(name).buffer);
         }
 
         this.buffers.set(name, {
@@ -90,6 +96,13 @@ class Mesh {
                 }
             }
         });
+    }
+
+    dispose() {
+        for(let buffer of this.buffersToDelete) {
+            Gol.gl.deleteBuffer(buffer);
+        }
+        this.buffersToDelete.length = 0;
     }
 
 }
