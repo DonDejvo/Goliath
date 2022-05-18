@@ -39,15 +39,15 @@ class AudioManager {
 
         this.masterGain = this.audioContext.createGain();
         this.masterGain.connect(this.audioContext.destination);
-        this.masterGain.gain.value = 0.5;
+        this.masterGain.gain.value = 1.0;
 
         this.bgMusicGain = this.audioContext.createGain();
         this.bgMusicGain.connect(this.masterGain);
-        this.bgMusicGain.gain.value = 0.5;
+        this.bgMusicGain.gain.value = 1.0;
 
         this.cueGain = this.audioContext.createGain();
         this.cueGain.connect(this.masterGain);
-        this.cueGain.gain.value = 0.5;
+        this.cueGain.gain.value = 1.0;
     }
 
     get masterVolume() {
@@ -102,7 +102,7 @@ class AudioManager {
         return !(this.bgMusicNode === null);
     }
 
-    playCue(clipName, volume = 0.5) {
+    playCue(clipName, volume = 1.0) {
         const clipData = Gol.files.get(clipName);
 
         const cueNode = this.audioContext.createBufferSource();

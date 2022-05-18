@@ -85,7 +85,7 @@ class Input {
             const touchInfo = this.touchInfo[touch.identifier];
 
             touchInfo.x = x;
-            touchInfo.y = y;
+            touchInfo.y = boundingRect.height - y;
 
             switch (ev.type) {
                 case "touchstart":
@@ -108,7 +108,7 @@ class Input {
         const touchInfo = this.touchInfo[0];
 
         touchInfo.x = x;
-        touchInfo.y = y;
+        touchInfo.y = boundingRect.height - y;
 
         switch (ev.type) {
             case "mousedown":
