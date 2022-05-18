@@ -1,5 +1,5 @@
 import { Gol, Game, Screen, graphics, glMatrix, math } from "../../dist/goliath.js";
-const { Drawable, ShaderInstance, Texture, PerspectiveCamera, Sprite, OrthographicCamera } = graphics;
+const { Drawable, ShaderInstance, Texture, PerspectiveCamera, Sprite, OrthographicCamera, Mesh } = graphics;
 const { Cube, Sphere, Quad } = graphics.meshes;
 const { vec3, vec4 } = glMatrix;
 const { MathUtils, LinearSpline } = math;
@@ -76,7 +76,7 @@ class MainScreen extends Screen {
         this.woodTexture = new Texture(Gol.files.get("snakewood"), { filter: Gol.gl.NEAREST });
 
         this.createSky();
-        this.createGround();
+        this.createGroundBatch();
         this.createHouse();
 
     }
@@ -101,7 +101,6 @@ class MainScreen extends Screen {
     createGround() {
 
         const countX = 15, countZ = 15, countY = 2;
-        const blockSize = 1;
 
         const addBlock = (x, y, z) => {
 
@@ -111,10 +110,7 @@ class MainScreen extends Screen {
                     colors: [...new Array(6)].map((elem, idx) => {
                         const v = 1 - 0.05 * idx;
                         return [v, v, v, 1.0];
-                    }),
-                    width: blockSize,
-                    depth: blockSize,
-                    height: 1
+                    })
                 }),
                 new ShaderInstance(Gol.graphics.getShader("texture")),
                 y == 0 ? this.grassTexture : this.dirtTexture
@@ -134,9 +130,9 @@ class MainScreen extends Screen {
 
                 for(let y = 0; y < countY; ++y) {
                     addBlock(
-                        (x - Math.floor(countX * 0.5)) * blockSize, 
+                        x - Math.floor(countX * 0.5), 
                         -y, 
-                        (z - Math.floor(countZ * 0.5)) * blockSize);
+                        z - Math.floor(countZ * 0.5));
                 }
             }
         }
@@ -315,6 +311,62 @@ class MainScreen extends Screen {
             block.draw(constants);
         }
 
+    }
+
+    createGroundBatch() {
+
+        const batch = new Drawable(
+            new Mesh(),
+            new ShaderInstance(Gol.graphics.getShader("texture")),
+            this.grassTexture
+        );
+
+        const cube = new Cube({
+            textureFaces: "multiple",
+            colors: [...new Array(6)].map((elem, idx) => {
+                const v = 1 - 0.05 * idx;
+                return [v, v, v, 1.0];
+            })
+        });
+
+        const countX = 25, countZ = 25;
+
+        const positions = [];
+        const uvs = [];
+        const colors = [];
+        const indices = [];
+
+        let indexOffset = 0;
+
+        const positionBuffer = cube.buffers.get("positions");
+        const uvBuffer = cube.buffers.get("uvs");
+        const colorBuffer = cube.buffers.get("colors");
+        const indexBuffer = cube.buffers.get("index");
+
+        for(let x = 0; x < countX; ++x) {
+            for(let z = 0; z < countZ; ++z) {
+
+                const position = [
+                    x - Math.floor(countX * 0.5), 
+                    0, 
+                    z - Math.floor(countZ * 0.5)
+                ];
+
+                positions.push(...positionBuffer.data.map((elem, idx) => elem + position[idx % 3]));
+                uvs.push(...uvBuffer.data);
+                colors.push(...colorBuffer.data);
+                indices.push(...indexBuffer.data.map((elem, idx) => elem + indexOffset / 6 * 4));
+
+                indexOffset += indexBuffer.data.length;
+            }
+        }
+
+        batch.mesh.bufferData(positions, 3, "positions");
+        batch.mesh.bufferData(colors, 4, "colors");
+        batch.mesh.bufferData(uvs, 2, "uvs");
+        batch.mesh.bufferData(indices, 0, "index");
+
+        this.blocks.push(batch);
     }
 
 }
