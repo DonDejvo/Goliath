@@ -1,9 +1,68 @@
-import { mat4 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
 import { Gol } from "../gol.js";
 import { Mesh } from "./mesh.js";
 import { ShaderInstance } from "./shader-instance.js";
 import { Texture } from "./texture.js";
 
+class Particle {
+
+    /**
+     * 
+     * @type {vec3}
+     */
+    position;
+
+    /**
+     * 
+     * @type {vec3}
+     */
+    velocity;
+
+    /**
+     * 
+     * @type {vec3}
+     */
+    color;
+
+    /**
+     * 
+     * @type {number}
+     */
+    alpha;
+
+    /**
+     * 
+     * @type {number}
+     */
+    size;
+
+    /**
+     * 
+     * @type {number}
+     */
+    life;
+
+    /**
+     * 
+     * @type {number}
+     */
+    maxLife;
+
+    constructor(params) {
+        this.position = params.position;
+        this.maxLife = params.life;
+        this.life = params.life;
+        this.size = params.size !== undefined ? params.size : 1;
+        this.velocity = params.velocity || [0, 0, 0];
+        this.color = params.color || [1, 1, 1];
+        this.alpha = params.alpha !== undefined ? params.alpha : 1;
+    }
+
+    update() {
+        this.life -= Gol.graphics.delta * 1000;
+    }
+
+}
 
 class ParticleSystem {
 
@@ -25,13 +84,22 @@ class ParticleSystem {
      */
     shader;
 
-
+    /**
+     * 
+     * @type {Particle[]}
+     */
     particles = [];
 
     constructor(params) {
         this.mesh = new Mesh();
         this.texture = params.texture;
         this.shader = new ShaderInstance(Gol.graphics.getShader("particle"));
+
+        this.onScreenResize(Gol.graphics.width, Gol.graphics.height);
+    }
+
+    onScreenResize(width, height) {
+        this.shader.setUniform("pointMultiplier", height / 2 * Math.tan(30 * Math.PI / 180));
     }
 
     addParticles() {}
@@ -88,5 +156,6 @@ class ParticleSystem {
 }
 
 export {
-    ParticleSystem
+    ParticleSystem,
+    Particle
 }

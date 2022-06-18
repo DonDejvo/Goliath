@@ -8,8 +8,8 @@ class Plane extends Mesh {
         const halfWidth = this.options.width ? this.options.width / 2 : 0.5;
         const halfDepth = this.options.depth ? this.options.depth / 2 : 0.5;
         const widthSegments = this.options.widthSegments || 1;
-        const depthSegments = this.options.depthSegments || 1;
-        const heightMap = this.options.heightMap || [...new Array(depthSegments + 1)].map(e => [...new Array(widthSegments + 1)].fill(0));
+        const depthSegments = this.options.depthSegments  || 1;
+        const heightMap = this.options.heightMap  || Plane.generateHeightMap(widthSegments, depthSegments);
 
         const positions = [];
         const normals = [];
@@ -65,6 +65,29 @@ class Plane extends Mesh {
                 colors.push(1);
             }
 
+        } else if (typeof this.options.colors == "function") {
+            const func = this.options.colors;
+
+            const colorCache = [];
+            for(let i = 0; i <= depthSegments; ++i) {
+                colorCache.push([]);
+                for(let j = 0; j <= widthSegments; ++j) {
+                    const c = func(j / widthSegments * halfWidth * 2 - halfWidth, heightMap[i][j], i / depthSegments * halfDepth * 2 - halfDepth);
+                    colorCache[i].push(c);
+                }
+            }
+
+            for (let i = 0; i < depthSegments; ++i) {
+                for (let j = 0; j < widthSegments; ++j) {
+                    colors.push(
+                        ...colorCache[i][j],
+                        ...colorCache[i][j + 1],
+                        ...colorCache[i + 1][j + 1],
+                        ...colorCache[i + 1][j],
+                    );
+                }
+            }
+
         } else if (this.options.colors.length == 1) {
 
             const c = this.options.colors[0];
@@ -84,6 +107,10 @@ class Plane extends Mesh {
         this.bufferData(uvs, 2, "uvs");
         this.bufferData(indices, 0, "index");
 
+    }
+
+    static generateHeightMap(widthSegments, depthSegments) {
+        return [...new Array(depthSegments + 1)].map(e => [...new Array(widthSegments + 1)].fill(0));
     }
 
 }

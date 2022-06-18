@@ -20,7 +20,7 @@ class TextDrawable extends Drawable {
 
     rainbow;
 
-    constructor(font, text, rainbow = false) {
+    constructor(font, text = "", rainbow = false) {
         super(
             new Mesh(),
             new ShaderInstance(Gol.graphics.getShader("texture")),

@@ -10,7 +10,9 @@ import { OrthographicCamera } from "./orthographic-camera.js";
 import { Sprite } from "./sprite.js";
 import { Font } from "./font.js";
 import { TextDrawable } from "./text-drawable.js";
-import { ParticleSystem } from "./particle-system.js";
+import { ParticleSystem, Particle } from "./particle-system.js";
+import { Batch } from "./batch.js";
+import { DrawableGroup } from "./drawable-group.js";
 
 export {
     Camera,
@@ -25,5 +27,8 @@ export {
     Font,
     TextDrawable,
     ParticleSystem,
+    Particle,
+    Batch,
+    DrawableGroup,
     meshes
 }

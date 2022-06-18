@@ -34,8 +34,26 @@ class Sprite extends Drawable {
             texture
         );
 
-        this.setRegionSize(srcWidth, srcHeight);
-        this.setRegionPosition(srcX, srcY);
+        //this.setRegionSize(srcWidth, srcHeight);
+        //this.setRegionPosition(srcX, srcY);
+        this.setRegion(srcX, srcY, srcWidth, srcHeight);
+    }
+
+    setRegion(x, y, width, height) {
+        this.regionX = x;
+        this.regionY = y;
+        this.regionWidth = width;
+        this.regionHeight = height;
+
+        const texWidth = this.texture.width, texHeight = this.texture.height;
+
+        const uvs = [
+            x / texWidth, y / texHeight,
+            (x + width) / texWidth, y / texHeight,
+            (x + width) / texWidth, (y + height) / texHeight,
+            x / texWidth, (y + height) / texHeight
+        ];
+        this.mesh.bufferData(uvs, 2, "uvs");
     }
 
     setRegionSize(width, height) {

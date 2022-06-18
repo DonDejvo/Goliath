@@ -90,7 +90,22 @@ class Shader {
                 name: "uvOffset",
                 type: "vec2",
                 location: Gol.gl.getUniformLocation(this.program, "uvOffset")
-            }
+            },
+            {
+                name: "fogColor",
+                type: "vec3",
+                location: Gol.gl.getUniformLocation(this.program, "fogColor")
+            },
+            {
+                name: "fogNear",
+                type: "float",
+                location: Gol.gl.getUniformLocation(this.program, "fogNear")
+            },
+            {
+                name: "fogFar",
+                type: "float",
+                location: Gol.gl.getUniformLocation(this.program, "fogFar")
+            },
         ];
     }
 
@@ -111,6 +126,52 @@ class Shader {
         return shader;
     }
 
+    dispose() {
+        
+    }
+
+    static create(type, opts = {}) {
+
+        switch(type) {
+            case this.Type.SIMPLE: {
+                const vsrc = [
+                    this.SIMPLE_VS
+                ].join("\n");
+
+                const fsrc = [
+                    opts.useFog === true ? "#define USE_FOG" : "",
+                    this.SIMPLE_FS
+                ].join("\n");
+
+                return new Shader(vsrc, fsrc);
+            }
+            case this.Type.TEXTURE: {
+                const vsrc = [
+                    this.TEXTURE_VS
+                ].join("\n");
+
+                const fsrc = [
+                    opts.useFog === true ? "#define USE_FOG" : "",
+                    this.TEXTURE_FS
+                ].join("\n");
+
+                return new Shader(vsrc, fsrc);
+            }  
+            case this.Type.PARTICLE: {
+                return new Shader(this.PARTICLE_VS, this.PARTICLE_FS);
+            }
+            default:
+                throw new Error("Type not found: " + type);
+        }
+
+    }
+
+    static Type = Object.freeze({
+        SIMPLE: 1,
+        TEXTURE: 2,
+        PARTICLE: 3
+    });
+
     static SIMPLE_VS = `
     uniform mat4 modelViewMatrix;
     uniform mat4 projectionMatrix;
@@ -119,10 +180,13 @@ class Shader {
     attribute vec4 color;
 
     varying vec4 vColor;
+    varying vec3 vPosition;
 
     void main(void) {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec4 worldPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * worldPosition;
         vColor = color;
+        vPosition = worldPosition.xyz;
     }
     `;
 
@@ -130,11 +194,21 @@ class Shader {
     precision mediump float;
 
     varying vec4 vColor;
+    varying vec3 vPosition;
 
     uniform vec3 ambientColor;
+    uniform vec3 fogColor;
+    uniform float fogNear;
+    uniform float fogFar;
 
     void main(void) {
-        gl_FragColor = vec4(vColor.rgb * ambientColor, vColor.a);
+        vec4 color = vec4(vColor.rgb * ambientColor, vColor.a);
+        #ifdef USE_FOG
+        float fogDistance = length(vPosition);
+        float fogAmount = smoothstep(fogNear, fogFar, fogDistance);
+        color = mix(color, vec4(fogColor, 1.0), fogAmount);
+        #endif
+        gl_FragColor = color;
     }
     `;
 
@@ -148,27 +222,40 @@ class Shader {
 
     varying vec4 vColor;
     varying vec2 vUv;
+    varying vec3 vPosition;
 
     void main(void) {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec4 worldPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * worldPosition;
         vColor = color;
         vUv = uv;
+        vPosition = worldPosition.xyz;
     }
     `;
 
-    static TEXTURE_FS = `
+    static TEXTURE_FS = ` 
     precision mediump float;
 
     varying vec4 vColor;
     varying vec2 vUv;
+    varying vec3 vPosition;
 
     uniform sampler2D tex;
     uniform vec3 ambientColor;
     uniform vec2 uvOffset;
+    uniform vec3 fogColor;
+    uniform float fogNear;
+    uniform float fogFar;
 
     void main(void) {
         vec4 texColor = texture2D(tex, vUv + uvOffset);
-        gl_FragColor = vec4(vColor.rgb * texColor.rgb * ambientColor, texColor.a * vColor.a);
+        vec4 color = vec4(vColor.rgb * texColor.rgb * ambientColor, texColor.a * vColor.a);
+        #ifdef USE_FOG
+        float fogDistance = length(vPosition);
+        float fogAmount = smoothstep(fogNear, fogFar, fogDistance);
+        color = mix(color, vec4(fogColor, texColor.a), fogAmount);
+        #endif
+        gl_FragColor = color;
     }
     `;
 
@@ -202,9 +289,6 @@ class Shader {
         vec4 texColor = texture2D(tex, gl_PointCoord);
         gl_FragColor = vec4(vColor.rgb * texColor.rgb * ambientColor * texColor.a, texColor.a);
         gl_FragColor *= vColor.a;
-        if(gl_FragColor.a == 0.0) {
-            discard;
-        }
     }
     `;
 }

@@ -32,6 +32,10 @@ class MathUtils {
         return arr[this.randInt(0, arr.length - 1)];
     }
 
+    static isPowerOf2(x) {
+        return (x & (x - 1)) == 0;
+    }
+
 }
 
 export {

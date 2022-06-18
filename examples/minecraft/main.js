@@ -1,5 +1,5 @@
 import { Gol, Game, Screen, graphics, glMatrix, math } from "../../dist/goliath.js";
-const { Drawable, ShaderInstance, Texture, PerspectiveCamera, Sprite, OrthographicCamera, Mesh } = graphics;
+const { Drawable, ShaderInstance, Texture, PerspectiveCamera, Sprite, OrthographicCamera, Mesh, Batch, Shader } = graphics;
 const { Cube, Sphere, Quad } = graphics.meshes;
 const { vec2, vec3, vec4 } = glMatrix;
 const { MathUtils, LinearSpline } = math;
@@ -76,12 +76,16 @@ class MainScreen extends Screen {
         this.mouse = { x: 0, y: 0, idx: -1 };
         this.blocks = [];
         this.movingUp = false;
+        this.transparentBlocks = [];
 
         this.controlsRenderer = new ControlsRenderer();
 
         this.mainCamera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height, 0.1, 2000);
         this.mainCamera.position[1] = 2;
         this.mainCamera.position[2] = 8;
+
+        this.fogSimpleShader = Shader.create(Shader.Type.SIMPLE, { useFog: true });
+        this.fogTextureShader = Shader.create(Shader.Type.TEXTURE, { useFog: true });
 
         this.grassTexture = new Texture(Gol.files.get("grass"), { filter: Gol.gl.NEAREST });
         this.dirtTexture = new Texture(Gol.files.get("dirt"), { filter: Gol.gl.NEAREST });
@@ -91,7 +95,7 @@ class MainScreen extends Screen {
 
         this.treeBatch = new Drawable(
             new Mesh(),
-            new ShaderInstance(Gol.graphics.getShader("texture")),
+            new ShaderInstance(this.fogTextureShader),
             this.leavesTexture
         );
 
@@ -147,6 +151,9 @@ class MainScreen extends Screen {
         this.createCloud(-6, 24, 5, 8, 1, 3);
         this.createCloud(0, 28, 7, 3, 1, 6);
 
+        this.cloudBatch = new Batch(new ShaderInstance(this.fogSimpleShader));
+        this.spriteBatch = new Batch(new ShaderInstance(this.fogTextureShader));
+
     }
 
     createSky() {
@@ -176,7 +183,7 @@ class MainScreen extends Screen {
                 height: height,
                 depth: depth
             }),
-            new ShaderInstance(Gol.graphics.getShader("simple")),
+            new ShaderInstance(this.fogSimpleShader),
             null
         );
         vec3.set(cloud.position, x, y, z);
@@ -209,7 +216,7 @@ class MainScreen extends Screen {
                         return [v, v, v, 1.0];
                     })
                 }),
-                new ShaderInstance(Gol.graphics.getShader("texture")),
+                new ShaderInstance(this.fogTextureShader),
                 tex
             );
             block.matrixAutoUpdate = false;
@@ -218,13 +225,13 @@ class MainScreen extends Screen {
                 y,
                 z);
 
-            this.blocks.push(block);
+            return block;
 
         }
 
         // trunk
         for (let y = 1; y <= height; ++y) {
-            addBlock(position[0], position[1] + y, position[2]);
+            this.blocks.push(addBlock(position[0], position[1] + y, position[2]));
         }
 
         const treeCrown = [];
@@ -242,7 +249,7 @@ class MainScreen extends Screen {
                     }
 
                     treeCrown.push([position[0] + x, position[1] + height + y, position[2] + z]);
-
+                    this.transparentBlocks.push(addBlock(position[0] + x, position[1] + height + y, position[2] + z, "leaves"));
                 }
             }
         }
@@ -255,7 +262,7 @@ class MainScreen extends Screen {
 
         const batch = new Drawable(
             new Mesh(),
-            new ShaderInstance(Gol.graphics.getShader("texture")),
+            new ShaderInstance(this.fogTextureShader),
             this.grassTexture
         );
 
@@ -353,7 +360,7 @@ class MainScreen extends Screen {
                         return [v, v, v, 1.0];
                     })
                 }),
-                new ShaderInstance(Gol.graphics.getShader("texture")),
+                new ShaderInstance(this.fogTextureShader),
                 tex
             );
             block.matrixAutoUpdate = false;
@@ -567,7 +574,10 @@ class MainScreen extends Screen {
     drawScene() {
 
         const constants = {
-            ambientColor: [1, 1, 1]
+            ambientColor: [1, 1, 1],
+            fogNear: 5,
+            fogFar: 60,
+            fogColor: [0.8, 0.9, 1.0]
         };
 
 
@@ -580,13 +590,25 @@ class MainScreen extends Screen {
 
         this.sky.draw(constants);
 
+        this.spriteBatch.setConstants(constants);
+        this.transparentBlocks.sort((b1, b2) => vec3.sqrDist(b2.position, this.mainCamera.position) - vec3.sqrDist(b1.position, this.mainCamera.position));
+        this.spriteBatch.begin();
         for (let block of this.blocks) {
+            this.spriteBatch.draw(block);
+        }
+        this.spriteBatch.end();
+
+        for(let block of this.transparentBlocks) {
             block.draw(constants);
         }
-        this.treeBatch.draw(constants);
+
+        this.cloudBatch.setConstants(constants);
+        this.cloudBatch.begin();
         for(let cloud of this.clouds) {
-            cloud.draw(constants);
+            this.cloudBatch.draw(cloud);
+            //cloud.draw(constants);
         }
+        this.cloudBatch.end();
 
     }
 
@@ -601,7 +623,7 @@ class MinecraftDemo extends Game {
         Gol.files.loadImage("snakewood", "assets/snakewood.png");
         Gol.files.loadImage("leaves", "assets/leaves.png");
         Gol.files.loadImage("controls", "../shared/assets/controls.png");
-        Gol.files.loadAudio("soundtrack", "assets/minecraft-soundtrack.mp3");
+        Gol.files.loadAudio("soundtrack", "../shared/assets/code-geass-for-you.mp3");
     }
 
     create() {

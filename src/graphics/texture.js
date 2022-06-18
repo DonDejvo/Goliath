@@ -1,4 +1,5 @@
 import { Gol } from "../gol.js";
+import { MathUtils } from "../math/math-utils.js";
 
 class Texture {
 
@@ -26,16 +27,14 @@ class Texture {
         Gol.gl.bindTexture(Gol.gl.TEXTURE_2D, this.id);
         Gol.gl.texImage2D(Gol.gl.TEXTURE_2D, 0, Gol.gl.RGBA, Gol.gl.RGBA, Gol.gl.UNSIGNED_BYTE, data);
 
-        Gol.gl.generateMipmap(Gol.gl.TEXTURE_2D);
+        if(MathUtils.isPowerOf2(data.width) && MathUtils.isPowerOf2(data.height)) {
+            Gol.gl.generateMipmap(Gol.gl.TEXTURE_2D);
+        }
 
         Gol.gl.bindTexture(Gol.gl.TEXTURE_2D, null);
 
-        if(params.filter !== undefined) {
-            this.setFilter(params.filter)
-        }
-        if(params.wrap !== undefined) {
-            this.setWrap(params.wrap);
-        }
+        this.setFilter(params.filter || Gol.gl.LINEAR);
+        this.setWrap(params.wrap || Gol.gl.CLAMP_TO_EDGE);
     }
 
     setFilter(filter) {

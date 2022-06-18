@@ -77,13 +77,7 @@ class Drawable {
         this.texture = texture;
     }
 
-    draw(constants) {
-        this.shader.activate();
-
-        if(this.texture) {
-            this.texture.bind();
-        }
-
+    updateMatrix() {
         if(this.matrixNeedsUpdate || this.matrixAutoUpdate) {
             this.matrixNeedsUpdate = false;
 
@@ -97,6 +91,16 @@ class Drawable {
             mat3.invert(this.normalMatrix, this.normalMatrix);
             mat3.transpose(this.normalMatrix, this.normalMatrix);
         }
+    }
+
+    draw(constants) {
+        this.shader.activate();
+
+        if(this.texture) {
+            this.texture.bind();
+        }
+
+        this.updateMatrix();
 
         const viewMatrix = constants.viewMatrix;
         const modelViewMatrix = mat4.create();

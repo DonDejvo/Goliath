@@ -12,15 +12,9 @@ class Mesh {
 
     /**
      * 
-     * @type {WebGLBuffer[]}
-     */
-    buffersToDelete = [];
-
-    /**
-     * 
      * @type {number}
      */
-    vertexCount = 0;
+     indexCount = 0;
 
     /**
      * 
@@ -37,26 +31,42 @@ class Mesh {
 
     onInit() {}
 
-    bufferData(data, size, name) {
-        const buffer = Gol.gl.createBuffer();
-        if(name == "index") {
-            Gol.gl.bindBuffer(Gol.gl.ELEMENT_ARRAY_BUFFER, buffer);
-            Gol.gl.bufferData(Gol.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), Gol.gl.STATIC_DRAW);
-            this.vertexCount = data.length;
-        } else {
-            Gol.gl.bindBuffer(Gol.gl.ARRAY_BUFFER, buffer);
-            Gol.gl.bufferData(Gol.gl.ARRAY_BUFFER, new Float32Array(data), Gol.gl.STATIC_DRAW);
-        }
+    createBuffer(name, size) {
+        const info = {
+            size,
+            data: [],
+            buffer: null
+        };
+        this.buffers.set(name, info);
+        return info;
+    }
 
-        if(this.buffers.has(name)) {
-            this.buffersToDelete.push(this.buffers.get(name).buffer);
-        }
+    getBuffer(name) {
+        return this.buffers.get(name);
+    }
+
+    bufferData(data, size, name) {
 
         this.buffers.set(name, {
             size,
             data,
-            buffer
+            buffer: null
         });
+    }
+
+    initBuffer(name) {
+        const info = this.buffers.get(name);
+        if(info.buffer == null) {
+            info.buffer = Gol.gl.createBuffer();
+        }
+        if(name == "index") {
+            Gol.gl.bindBuffer(Gol.gl.ELEMENT_ARRAY_BUFFER, info.buffer);
+            Gol.gl.bufferData(Gol.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(info.data), Gol.gl.STATIC_DRAW);
+            this.indexCount = info.data.length;
+        } else {
+            Gol.gl.bindBuffer(Gol.gl.ARRAY_BUFFER, info.buffer);
+            Gol.gl.bufferData(Gol.gl.ARRAY_BUFFER, new Float32Array(info.data), Gol.gl.STATIC_DRAW);
+        }
     }
 
     /**
@@ -70,6 +80,10 @@ class Mesh {
             const loc = shader.shaderData.attribs[name];
 
             if(loc != -1) {
+                if(info.buffer == null) {
+                    this.initBuffer(name);
+                }
+
                 if (name == "index") {
                     Gol.gl.bindBuffer(Gol.gl.ELEMENT_ARRAY_BUFFER, info.buffer);
                 } else {
@@ -82,7 +96,7 @@ class Mesh {
     }
 
     draw() {
-        Gol.gl.drawElements(Gol.gl.TRIANGLES, this.vertexCount, Gol.gl.UNSIGNED_SHORT, 0);
+        Gol.gl.drawElements(Gol.gl.TRIANGLES, this.indexCount, Gol.gl.UNSIGNED_SHORT, 0);
     }
 
     unbind(shader) {
@@ -96,13 +110,6 @@ class Mesh {
                 }
             }
         });
-    }
-
-    dispose() {
-        for(let buffer of this.buffersToDelete) {
-            Gol.gl.deleteBuffer(buffer);
-        }
-        this.buffersToDelete.length = 0;
     }
 
 }
