@@ -12,6 +12,6 @@ jobs:
             - uses: actions/checkout@v2
             - uses: actions/setup-node@v2
             - name: Install dependencies
-                run: npm ci
+              run: npm ci
             - name: Lint repository
-                run: npm run lint:nofix
+              run: npm run lint:nofix
