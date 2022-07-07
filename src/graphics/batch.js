@@ -1,18 +1,18 @@
-import { mat4, vec3 } from "gl-matrix";
-import { Mesh } from "./mesh.js";
+import { mat4, vec3 } from 'gl-matrix';
+import { Mesh } from './mesh.js';
 
 class Batch {
 
     static MAX_COUNT = 65536;
 
     /**
-     * 
+     *
      * @type {Mesh}
      */
     mesh = new Mesh();
 
     /**
-     * 
+     *
      * @type {ShaderInstance}
      */
     shader;
@@ -23,13 +23,13 @@ class Batch {
     idx = 0;
 
     /**
-     * 
-     * 
+     *
+     *
      */
     texture = null;
 
     /**
-     * 
+     *
      * @type {Object}
      */
     constants = {
@@ -39,82 +39,115 @@ class Batch {
         cameraPosition: vec3.create(),
     };
 
-    constructor(shader) {
+    constructor( shader ) {
+
         this.shader = shader;
 
-        if(shader.shaderData.attribs["index"] != -1) {
-            this.mesh.createBuffer("index", 0);        
+        if ( shader.shaderData.attribs[ 'index' ] != - 1 ) {
+
+            this.mesh.createBuffer( 'index', 0 );
+
         }
-        if(shader.shaderData.attribs["positions"] != -1) {
-            this.mesh.createBuffer("positions", 3);
+
+        if ( shader.shaderData.attribs[ 'positions' ] != - 1 ) {
+
+            this.mesh.createBuffer( 'positions', 3 );
+
         }
-        if(shader.shaderData.attribs["uvs"] != -1) {
-            this.mesh.createBuffer("uvs", 2);
+
+        if ( shader.shaderData.attribs[ 'uvs' ] != - 1 ) {
+
+            this.mesh.createBuffer( 'uvs', 2 );
+
         }
-        if(shader.shaderData.attribs["colors"] != -1) {
-            this.mesh.createBuffer("colors", 4);
+
+        if ( shader.shaderData.attribs[ 'colors' ] != - 1 ) {
+
+            this.mesh.createBuffer( 'colors', 4 );
+
         }
-        
+
     }
 
-    setConstants(c) {
+    setConstants( c ) {
+
         this.constants = { ...c };
+
     }
 
-    begin() { 
+    begin() {
+
         this.idx = 0;
-        this.mesh.buffers.forEach((info) => {
+        this.mesh.buffers.forEach( ( info ) => {
+
             info.data.length = 0;
-        });
+
+        } );
         this.texture = null;
+
     }
 
-    draw(drawable) {
+    draw( drawable ) {
 
-        const count = drawable.mesh.getBuffer("positions").data.length / 3;
+        const count = drawable.mesh.getBuffer( 'positions' ).data.length / 3;
 
         if (
             this.idx + count > Batch.MAX_COUNT ||
             drawable.texture != this.texture
         ) {
+
             this.flush();
+
         }
 
         this.texture = drawable.texture;
 
         drawable.updateMatrix();
 
-        this.mesh.buffers.forEach((info, name) => {
+        this.mesh.buffers.forEach( ( info, name ) => {
 
-            const data = drawable.mesh.getBuffer(name).data;
-            
-            switch(name) {
-                case "positions": 
-                    for(let i = 0; i < data.length; i += 3) {
-                        const vec = vec3.fromValues(data[i], data[i + 1], data[i + 2]);
+            const data = drawable.mesh.getBuffer( name ).data;
 
-                        vec3.transformMat4(vec, vec, drawable.modelMatrix);
+            switch ( name ) {
 
-                        for(let j = 0; j < 3; ++j) {
-                            info.data.push(vec[j]);
+                case 'positions':
+                    for ( let i = 0; i < data.length; i += 3 ) {
+
+                        const vec = vec3.fromValues( data[ i ], data[ i + 1 ], data[ i + 2 ] );
+
+                        vec3.transformMat4( vec, vec, drawable.modelMatrix );
+
+                        for ( let j = 0; j < 3; ++j ) {
+
+                            info.data.push( vec[ j ] );
+
                         }
+
                     }
-                    
+
                     break;
-                case "index":
-                    for (let i = 0; i < data.length; ++i) {
-                        info.data.push(data[i] + this.idx);
+                case 'index':
+                    for ( let i = 0; i < data.length; ++i ) {
+
+                        info.data.push( data[ i ] + this.idx );
+
                     }
+
                     break;
+
                 default:
-                    for (let i = 0; i < data.length; ++i) {
-                        info.data.push(data[i]);
+                    for ( let i = 0; i < data.length; ++i ) {
+
+                        info.data.push( data[ i ] );
+
                     }
+
             }
 
-        });
+        } );
 
         this.idx += count;
+
     }
 
     end() {
@@ -124,18 +157,25 @@ class Batch {
     }
 
     flush() {
-        if (this.idx == 0) {
+
+        if ( this.idx == 0 ) {
+
             return;
+
         }
 
-        this.mesh.buffers.forEach((_, name) => {
-            this.mesh.initBuffer(name); 
-        });
+        this.mesh.buffers.forEach( ( _, name ) => {
+
+            this.mesh.initBuffer( name );
+
+        } );
 
         this.shader.activate();
 
-        if(this.texture) {
+        if ( this.texture ) {
+
             this.texture.bind();
+
         }
 
         const modelMatrix = mat4.create();
@@ -143,27 +183,31 @@ class Batch {
 
         const viewMatrix = this.constants.viewMatrix;
         const modelViewMatrix = mat4.create();
-        mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
 
-        this.shader.setUniform("modelViewMatrix", modelViewMatrix);
-        this.shader.setUniform("modelMatrix", modelMatrix);
-        this.shader.setUniform("normalMatrix", normalMatrix);
+        mat4.multiply( modelViewMatrix, viewMatrix, modelMatrix );
 
-        this.shader.bind(this.constants);
-        this.mesh.bind(this.shader);
+        this.shader.setUniform( 'modelViewMatrix', modelViewMatrix );
+        this.shader.setUniform( 'modelMatrix', modelMatrix );
+        this.shader.setUniform( 'normalMatrix', normalMatrix );
+
+        this.shader.bind( this.constants );
+        this.mesh.bind( this.shader );
 
         this.mesh.draw();
 
-        this.mesh.unbind(this.shader);
+        this.mesh.unbind( this.shader );
 
         this.idx = 0;
-        this.mesh.buffers.forEach((info) => {
+        this.mesh.buffers.forEach( ( info ) => {
+
             info.data.length = 0;
-        });
+
+        } );
+
     }
 
 }
 
 export {
     Batch
-}
+};

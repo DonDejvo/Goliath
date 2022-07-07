@@ -1,176 +1,194 @@
-import { Gol } from "../gol.js";
+import { Gol } from '../gol.js';
 
 class Shader {
 
     /**
-     * 
+     *
      * @type {WebGLProgram}
      */
     program;
 
     /**
-     * 
-     * @param {string} vsrc Vertex source 
+     *
+     * @param {string} vsrc Vertex source
      * @param {string} fsrc Fragment source
      */
-    constructor(vsrc, fsrc) {
-        const vshader = this.compileShader(vsrc, Gol.gl.VERTEX_SHADER);
-        const fshader = this.compileShader(fsrc, Gol.gl.FRAGMENT_SHADER);
+    constructor( vsrc, fsrc ) {
+
+        const vshader = this.compileShader( vsrc, Gol.gl.VERTEX_SHADER );
+        const fshader = this.compileShader( fsrc, Gol.gl.FRAGMENT_SHADER );
 
         this.program = Gol.gl.createProgram();
-        Gol.gl.attachShader(this.program, vshader);
-        Gol.gl.attachShader(this.program, fshader);
-        Gol.gl.linkProgram(this.program);
+        Gol.gl.attachShader( this.program, vshader );
+        Gol.gl.attachShader( this.program, fshader );
+        Gol.gl.linkProgram( this.program );
 
-        if (!Gol.gl.getProgramParameter(this.program, Gol.gl.LINK_STATUS)) {
-            console.log(Gol.gl.getProgramInfoLog(this.program));
-            throw new Error("program unable to link");
+        if ( !Gol.gl.getProgramParameter( this.program, Gol.gl.LINK_STATUS ) ) {
+
+            console.log( Gol.gl.getProgramInfoLog( this.program ) );
+            throw new Error( 'program unable to link' );
+
         }
 
         this.attribs = {
-            positions: Gol.gl.getAttribLocation(this.program, "position"),
-            normals: Gol.gl.getAttribLocation(this.program, "normal"),
-            colors: Gol.gl.getAttribLocation(this.program, "color"),
-            uvs: Gol.gl.getAttribLocation(this.program, "uv"),
-            sizes: Gol.gl.getAttribLocation(this.program, "size")
+            positions: Gol.gl.getAttribLocation( this.program, 'position' ),
+            normals: Gol.gl.getAttribLocation( this.program, 'normal' ),
+            colors: Gol.gl.getAttribLocation( this.program, 'color' ),
+            uvs: Gol.gl.getAttribLocation( this.program, 'uv' ),
+            sizes: Gol.gl.getAttribLocation( this.program, 'size' )
         };
 
         this.uniforms = [
             {
-                name: "projectionMatrix",
-                type: "mat4",
-                location: Gol.gl.getUniformLocation(this.program, "projectionMatrix")
+                name: 'projectionMatrix',
+                type: 'mat4',
+                location: Gol.gl.getUniformLocation( this.program, 'projectionMatrix' )
             },
             {
-                name: "modelViewMatrix",
-                type: "mat4",
-                location: Gol.gl.getUniformLocation(this.program, "modelViewMatrix"),
+                name: 'modelViewMatrix',
+                type: 'mat4',
+                location: Gol.gl.getUniformLocation( this.program, 'modelViewMatrix' ),
             },
             {
-                name: "modelMatrix",
-                type: "mat4",
-                location: Gol.gl.getUniformLocation(this.program, "modelMatrix"),
+                name: 'modelMatrix',
+                type: 'mat4',
+                location: Gol.gl.getUniformLocation( this.program, 'modelMatrix' ),
             },
             {
-                name: "normalMatrix",
-                type: "mat3",
-                location: Gol.gl.getUniformLocation(this.program, "normalMatrix"),
+                name: 'normalMatrix',
+                type: 'mat3',
+                location: Gol.gl.getUniformLocation( this.program, 'normalMatrix' ),
             },
             {
-                name: "lightColor",
-                type: "vec3",
-                location: Gol.gl.getUniformLocation(this.program, "lightColor"),
+                name: 'lightColor',
+                type: 'vec3',
+                location: Gol.gl.getUniformLocation( this.program, 'lightColor' ),
             },
             {
-                name: "lightDirection",
-                type: "vec3",
-                location: Gol.gl.getUniformLocation(this.program, "lightDirection"),
+                name: 'lightDirection',
+                type: 'vec3',
+                location: Gol.gl.getUniformLocation( this.program, 'lightDirection' ),
             },
             {
-                name: "lightPosition",
-                type: "vec3",
-                location: Gol.gl.getUniformLocation(this.program, "lightPosition"),
+                name: 'lightPosition',
+                type: 'vec3',
+                location: Gol.gl.getUniformLocation( this.program, 'lightPosition' ),
             },
             {
-                name: "cameraPosition",
-                type: "vec3",
-                location: Gol.gl.getUniformLocation(this.program, "cameraPosition"),
+                name: 'cameraPosition',
+                type: 'vec3',
+                location: Gol.gl.getUniformLocation( this.program, 'cameraPosition' ),
             },
             {
-                name: "pointMultiplier",
-                type: "float",
-                location: Gol.gl.getUniformLocation(this.program, "pointMultiplier")
+                name: 'pointMultiplier',
+                type: 'float',
+                location: Gol.gl.getUniformLocation( this.program, 'pointMultiplier' )
             },
             {
-                name: "ambientColor",
-                type: "vec3",
-                location: Gol.gl.getUniformLocation(this.program, "ambientColor")
+                name: 'ambientColor',
+                type: 'vec3',
+                location: Gol.gl.getUniformLocation( this.program, 'ambientColor' )
             },
             {
-                name: "uvOffset",
-                type: "vec2",
-                location: Gol.gl.getUniformLocation(this.program, "uvOffset")
+                name: 'uvOffset',
+                type: 'vec2',
+                location: Gol.gl.getUniformLocation( this.program, 'uvOffset' )
             },
             {
-                name: "fogColor",
-                type: "vec3",
-                location: Gol.gl.getUniformLocation(this.program, "fogColor")
+                name: 'fogColor',
+                type: 'vec3',
+                location: Gol.gl.getUniformLocation( this.program, 'fogColor' )
             },
             {
-                name: "fogNear",
-                type: "float",
-                location: Gol.gl.getUniformLocation(this.program, "fogNear")
+                name: 'fogNear',
+                type: 'float',
+                location: Gol.gl.getUniformLocation( this.program, 'fogNear' )
             },
             {
-                name: "fogFar",
-                type: "float",
-                location: Gol.gl.getUniformLocation(this.program, "fogFar")
+                name: 'fogFar',
+                type: 'float',
+                location: Gol.gl.getUniformLocation( this.program, 'fogFar' )
             },
         ];
+
     }
 
     activate() {
-        Gol.gl.useProgram(this.program);
+
+        Gol.gl.useProgram( this.program );
+
     }
 
-    compileShader(src, type) {
-        const shader = Gol.gl.createShader(type);
+    compileShader( src, type ) {
 
-        Gol.gl.shaderSource(shader, src);
-        Gol.gl.compileShader(shader);
+        const shader = Gol.gl.createShader( type );
 
-        if (!Gol.gl.getShaderParameter(shader, Gol.gl.COMPILE_STATUS)) {
-            console.log(Gol.gl.getShaderInfoLog(shader));
-            throw new Error("shader unable to compile");
+        Gol.gl.shaderSource( shader, src );
+        Gol.gl.compileShader( shader );
+
+        if ( !Gol.gl.getShaderParameter( shader, Gol.gl.COMPILE_STATUS ) ) {
+
+            console.log( Gol.gl.getShaderInfoLog( shader ) );
+            throw new Error( 'shader unable to compile' );
+
         }
+
         return shader;
+
     }
 
     dispose() {
-        
+
     }
 
-    static create(type, opts = {}) {
+    static create( type, opts = {} ) {
 
-        switch(type) {
+        switch ( type ) {
+
             case this.Type.SIMPLE: {
-                const vsrc = [
-                    this.SIMPLE_VS
-                ].join("\n");
+
+                const vsrc = [ this.SIMPLE_VS ].join( '\n' );
 
                 const fsrc = [
-                    opts.useFog === true ? "#define USE_FOG" : "",
+                    opts.useFog === true ? '#define USE_FOG' : '',
                     this.SIMPLE_FS
-                ].join("\n");
+                ].join( '\n' );
 
-                return new Shader(vsrc, fsrc);
+                return new Shader( vsrc, fsrc );
+
             }
+
             case this.Type.TEXTURE: {
-                const vsrc = [
-                    this.TEXTURE_VS
-                ].join("\n");
+
+                const vsrc = [ this.TEXTURE_VS ].join( '\n' );
 
                 const fsrc = [
-                    opts.useFog === true ? "#define USE_FOG" : "",
+                    opts.useFog === true ? '#define USE_FOG' : '',
                     this.TEXTURE_FS
-                ].join("\n");
+                ].join( '\n' );
 
-                return new Shader(vsrc, fsrc);
-            }  
-            case this.Type.PARTICLE: {
-                return new Shader(this.PARTICLE_VS, this.PARTICLE_FS);
+                return new Shader( vsrc, fsrc );
+
             }
+
+            case this.Type.PARTICLE: {
+
+                return new Shader( this.PARTICLE_VS, this.PARTICLE_FS );
+
+            }
+
             default:
-                throw new Error("Type not found: " + type);
+                throw new Error( 'Type not found: ' + type );
+
         }
 
     }
 
-    static Type = Object.freeze({
+    static Type = Object.freeze( {
         SIMPLE: 1,
         TEXTURE: 2,
         PARTICLE: 3
-    });
+    } );
 
     static SIMPLE_VS = `
     uniform mat4 modelViewMatrix;
@@ -291,8 +309,9 @@ class Shader {
         gl_FragColor *= vColor.a;
     }
     `;
+
 }
 
 export {
     Shader
-}
+};
