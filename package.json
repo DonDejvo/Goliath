@@ -6,7 +6,8 @@
     "scripts": {
         "build": "node build.js",
         "lint": "eslint . --ext .js --fix",
-        "lint:nofix": "eslint . --ext .js"
+        "lint:nofix": "eslint . --ext .js",
+        "docs": "jsdoc src/ -d ./docs/"
     },
     "repository": {
         "type": "git",
