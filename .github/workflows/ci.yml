@@ -1,0 +1,17 @@
+# Goliath CI v1.0
+
+name: Goliath-CI
+
+on:
+    [push, pull_request]
+
+jobs:
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2
+            - name: Install dependencies
+                run: npm ci
+            - name: Lint repository
+                run: npm run lint:nofix
