@@ -18,7 +18,6 @@
         "no-debugger": "error",
         "no-undef": "error",
         "no-alert": "warn",
-        "no-var": "error",
         "indent": [
             "error",
             4,
