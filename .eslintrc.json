@@ -16,7 +16,6 @@
         "arrow-spacing": "error",
         "prefer-const": "warn",
         "no-debugger": "error",
-        "no-undef": "error",
         "no-alert": "warn",
         "indent": [
             "error",
