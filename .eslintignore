@@ -1,0 +1,6 @@
+# sourcemaps and minified files
+*.map
+*.min.*
+
+# documentation
+docs/

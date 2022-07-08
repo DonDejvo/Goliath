@@ -1,0 +1,8 @@
+text=auto
+
+*.{js,ts,json,css,html} text eol=crlf
+
+*.{cmd,bat,ps1} eol=crlf
+*.{sh} eol=lf
+
+*.{jpg,jpeg,png,gif,svg,mp3,mp4} binary

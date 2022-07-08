@@ -1,0 +1,9 @@
+# vendors
+node_modules/
+
+# env
+.vs/
+.vscode/
+
+# sourcemaps
+*.map

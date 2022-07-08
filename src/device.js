@@ -2,7 +2,7 @@
 class Device {
 
     /**
-     * 
+     *
      * @type {string}
      */
     type;
@@ -10,20 +10,27 @@ class Device {
     constructor() {
 
         this.detectDeviceType();
+
     }
 
     detectDeviceType() {
+
         const ua = navigator.userAgent;
 
-        if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone/i.test(ua)) {
-            this.type = "mobile";
+        if ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone/i.test( ua ) ) {
+
+            this.type = 'mobile';
+
         } else {
-            this.type = "desktop";
+
+            this.type = 'desktop';
+
         }
+
     }
 
 }
 
 export {
     Device
-}
+};

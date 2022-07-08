@@ -1,14 +1,16 @@
 /**
  * Represents one of game screens, such as a main menu, a settings menu, the game screen and so on.
- * 
+ *
  * @author DonDejvo
- * 
+ *
  * @see Game
  */
 class Screen {
 
     constructor() {
+
         this.create();
+
     }
 
     create() {}
@@ -26,14 +28,14 @@ class Screen {
     /**
      * @see Game#resize
      */
-    resize(width, height) {}
+    resize( width, height ) {}
 
     /**
      * Called when the screen should render itself.
-     * 
+     *
      * @param {number} delta the time in seconds since the last render
      */
-    render(delta) {}
+    render( delta ) {}
 
     dispose() {}
 
@@ -41,4 +43,4 @@ class Screen {
 
 export {
     Screen
-}
+};

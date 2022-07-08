@@ -1,4 +1,4 @@
-import { Mesh } from "../mesh.js";
+import { Mesh } from '../mesh.js';
 
 class Quad extends Mesh {
 
@@ -8,10 +8,10 @@ class Quad extends Mesh {
         const halfHeight = this.options.height ? this.options.height / 2 : 0.5;
 
         const positions = [
-            -halfWidth, halfHeight, 0,
+            - halfWidth, halfHeight, 0,
             halfWidth, halfHeight, 0,
-            halfWidth, -halfHeight, 0,
-            -halfWidth, -halfHeight, 0
+            halfWidth, - halfHeight, 0,
+            - halfWidth, - halfHeight, 0
         ];
 
         const normals = [
@@ -23,32 +23,42 @@ class Quad extends Mesh {
 
         const colors = [];
 
-        if(this.options.colors === undefined) {
+        if ( this.options.colors === undefined ) {
 
-           for(let i = 0; i < 16; ++i) {
-               colors.push(1);
-           }
+            for ( let i = 0; i < 16; ++i ) {
 
-        } else if(this.options.colors.length == 1) {
+                colors.push( 1 );
 
-            const c = this.options.colors[0];
-
-            for(let i = 0; i < 16; ++i) {
-                colors.push(c[i % 4]);
             }
 
-        } else if(this.options.colors.length == 4) {
-            
-            for(let i = 0; i < 4; ++i) {
-                const c = this.options.colors[i];
-                for(let j = 0; j < 4; ++j) {
-                    colors.push(c[j]);
+        } else if ( this.options.colors.length == 1 ) {
+
+            const c = this.options.colors[ 0 ];
+
+            for ( let i = 0; i < 16; ++i ) {
+
+                colors.push( c[ i % 4 ] );
+
+            }
+
+        } else if ( this.options.colors.length == 4 ) {
+
+            for ( let i = 0; i < 4; ++i ) {
+
+                const c = this.options.colors[ i ];
+
+                for ( let j = 0; j < 4; ++j ) {
+
+                    colors.push( c[ j ] );
+
                 }
+
             }
 
         } else {
 
-            throw new Error("options.colors requires 1 or 4 elements");
+            throw new Error( 'options.colors requires 1 or 4 elements' );
+
         }
 
         const uvs = [
@@ -63,15 +73,16 @@ class Quad extends Mesh {
             0, 2, 3
         ];
 
-        this.bufferData(positions, 3, "positions");
-        this.bufferData(normals, 3, "normals");
-        this.bufferData(colors, 4, "colors");
-        this.bufferData(uvs, 2, "uvs");
-        this.bufferData(indices, 0, "index");
+        this.bufferData( positions, 3, 'positions' );
+        this.bufferData( normals, 3, 'normals' );
+        this.bufferData( colors, 4, 'colors' );
+        this.bufferData( uvs, 2, 'uvs' );
+        this.bufferData( indices, 0, 'index' );
+
     }
 
 }
 
 export {
     Quad
-}
+};
