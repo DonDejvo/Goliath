@@ -10,11 +10,9 @@
         "object-shorthand": "error",
         "no-extra-parens": "error",
         "no-multi-spaces": "error",
-        "no-unused-vars": "warn",
         "no-extra-semi": "error",
         "no-new-object": "error",
         "arrow-spacing": "error",
-        "prefer-const": "warn",
         "no-debugger": "error",
         "no-alert": "warn",
         "indent": [
