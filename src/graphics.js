@@ -142,13 +142,13 @@ class Graphics {
     compileShaders() {
 
         this.shaders.set("simple",
-            new Shader(Shader.SIMPLE_VS, Shader.SIMPLE_FS));
+            Shader.create(Shader.Type.SIMPLE));
 
         this.shaders.set("texture",
-            new Shader(Shader.TEXTURE_VS, Shader.TEXTURE_FS));
+        Shader.create(Shader.Type.TEXTURE));
 
         this.shaders.set("particle",
-            new Shader(Shader.PARTICLE_VS, Shader.PARTICLE_FS));
+        Shader.create(Shader.Type.PARTICLE));
 
     }
 

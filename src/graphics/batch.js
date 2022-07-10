@@ -1,5 +1,6 @@
 import { mat4, vec3 } from "gl-matrix";
 import { Mesh } from "./mesh.js";
+import { Drawable } from "./drawable.js";
 
 class Batch {
 
@@ -27,6 +28,12 @@ class Batch {
      * 
      */
     texture = null;
+
+    /**
+     * 
+     * @type {(position: vec3, drawable: Drawable) => void}
+     */
+    onCustomProcessPosition = null;
 
     /**
      * 
@@ -92,7 +99,9 @@ class Batch {
                 case "positions": 
                     for(let i = 0; i < data.length; i += 3) {
                         const vec = vec3.fromValues(data[i], data[i + 1], data[i + 2]);
-
+                        if(this.onCustomProcessPosition) {
+                            this.onCustomProcessPosition(vec, drawable);
+                        }
                         vec3.transformMat4(vec, vec, drawable.modelMatrix);
 
                         for(let j = 0; j < 3; ++j) {

@@ -2,6 +2,7 @@ import { mat4, vec3 } from "gl-matrix";
 import { Gol } from "../gol.js";
 import { Mesh } from "./mesh.js";
 import { ShaderInstance } from "./shader-instance.js";
+import { Shader } from "./shader.js";
 import { Texture } from "./texture.js";
 
 class Particle {
@@ -93,7 +94,7 @@ class ParticleSystem {
     constructor(params) {
         this.mesh = new Mesh();
         this.texture = params.texture;
-        this.shader = new ShaderInstance(Gol.graphics.getShader("particle"));
+        this.shader = new ShaderInstance(Shader.create(Shader.Type.PARTICLE, params.shaderOptions || {}));
 
         this.onScreenResize(Gol.graphics.width, Gol.graphics.height);
     }

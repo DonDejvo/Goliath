@@ -6,7 +6,10 @@ class Sphere extends Mesh {
 
     onInit() {
 
-        const radius = this.options.radius || 0.5;
+        if(this.options.radius === undefined) {
+            this.options.radius = 0.5;
+        }
+        const radius = this.options.radius;
         const widthSegments = this.options.widthSegments || 32;
         const heightSegments = this.options.heightSegments || 16;
 

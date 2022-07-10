@@ -36,6 +36,22 @@ class MathUtils {
         return (x & (x - 1)) == 0;
     }
 
+    static max(arr) {
+        return Math.max(...arr);
+    }
+
+    static min(arr) {
+        return Math.min(...arr);
+    }
+
+    static avg(arr) {
+        return arr.reduce((acc, a) => acc + a) / arr.length;
+    }
+
+    static step(edge1, edge2, x) {
+        return (x - edge1) / (edge2 - edge1);
+    }
+
 }
 
 export {

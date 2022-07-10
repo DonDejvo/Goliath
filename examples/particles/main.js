@@ -82,7 +82,7 @@ class MainScreen extends Screen {
 
         this.flameTexture = new Texture(Gol.files.get("flameparticle"));
 
-        this.fogTextureShader = Shader.create(Shader.Type.TEXTURE, { useFog: false });
+        this.fogTextureShader = Shader.create(Shader.Type.TEXTURE);
 
         this.mainCamera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height, 0.1, 1000);
         this.mainCamera.position[1] = 5;
@@ -91,7 +91,7 @@ class MainScreen extends Screen {
         for(let i = 0; i < 10; ++i) {
             const fire = new Fire({
                 texture: this.flameTexture,
-                camera: this.mainCamera
+                camera: this.mainCamera,
             });
             fire.position[0] = MathUtils.rand(-30, 30);
             fire.position[1] = 1;
