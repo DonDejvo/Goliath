@@ -15,10 +15,6 @@ class Texture {
      */
     data;
 
-    /**
-     * 
-     * @param {TexImageSource} data 
-     */
     constructor(data, params = {}) {
         this.data = data;
 

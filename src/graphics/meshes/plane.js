@@ -5,8 +5,16 @@ class Plane extends Mesh {
 
     onInit() {
 
-        const halfWidth = this.options.width ? this.options.width / 2 : 0.5;
-        const halfDepth = this.options.depth ? this.options.depth / 2 : 0.5;
+        if(this.options.width === undefined) { 
+            this.options.width = 1;
+        }
+        if(this.options.depth === undefined) {
+            this.options.depth = 1;
+        }
+
+        const halfWidth = this.options.width / 2;
+        const halfDepth = this.options.depth / 2;
+
         const widthSegments = this.options.widthSegments || 1;
         const depthSegments = this.options.depthSegments  || 1;
         const heightMap = this.options.heightMap  || Plane.generateHeightMap(widthSegments, depthSegments);

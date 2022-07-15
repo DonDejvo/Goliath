@@ -52,6 +52,14 @@ class MathUtils {
         return (x - edge1) / (edge2 - edge1);
     }
 
+    static radToDeg(rad) {
+        return rad / Math.PI * 180;
+    }
+
+    static degToRad(deg) {
+        return def / 180 * Math.PI;
+    }
+
 }
 
 export {

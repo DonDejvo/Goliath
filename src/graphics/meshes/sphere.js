@@ -12,6 +12,7 @@ class Sphere extends Mesh {
         const radius = this.options.radius;
         const widthSegments = this.options.widthSegments || 32;
         const heightSegments = this.options.heightSegments || 16;
+        const textureInvert = this.options.textureInvert === true;
 
         const positions = [];
         const uvs = [];
@@ -43,6 +44,12 @@ class Sphere extends Mesh {
                     1 - j / widthSegments,
                     i / heightSegments
                 ]);
+            }
+        }
+
+        if(textureInvert) {
+            for(let i = 0; i < uvCache.length; i += 2) {
+                uvCache[i] = 1 - uvCache[i];
             }
         }
 
