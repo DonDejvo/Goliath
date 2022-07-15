@@ -54,6 +54,7 @@ class Particle {
         this.maxLife = params.life;
         this.life = params.life;
         this.size = params.size !== undefined ? params.size : 1;
+        this.baseSize = this.size;
         this.velocity = params.velocity || [0, 0, 0];
         this.color = params.color || [1, 1, 1];
         this.alpha = params.alpha !== undefined ? params.alpha : 1;
@@ -101,6 +102,10 @@ class ParticleSystem {
 
     onScreenResize(width, height) {
         this.shader.setUniform("pointMultiplier", height / 2 * Math.tan(30 * Math.PI / 180));
+    }
+
+    resize(height) {
+        this.onScreenResize(0, height);
     }
 
     addParticles() {}
