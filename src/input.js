@@ -152,6 +152,10 @@ class Input {
         for(let info of this.touchInfo) {
             info.isJustTouched = info.isTouched && !info.wasTouched;
             info.wasTouched = info.isTouched;
+            if(info.isJustTouched) {
+                info.prevX = info.x;
+                info.prevY = info.y;
+            }
             info.deltaX = info.x - info.prevX;
             info.deltaY = info.y - info.prevY;
             info.prevX = info.x;

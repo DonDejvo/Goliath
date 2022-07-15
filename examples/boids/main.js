@@ -415,7 +415,7 @@ class MainScreen extends Screen {
                 seekDestination: positions[i],
                 color: baseColor
             };
-            for(let j = 0; j < 50; ++j) {
+            for(let j = 0; j < BoidsDemo.BOIDS_COUNT / 4; ++j) {
                 const boid = new Boid(this, params);
                 this.boids.push(boid);
             }
@@ -434,7 +434,7 @@ class MainScreen extends Screen {
         this.background = new Drawable(
             new Cube({
                 textureFaces: "skybox",
-                textureError: 0.0007,
+                textureError: 0.00075,
                 width: 1000,
                 height: 1000,
                 depth: 1000
@@ -515,7 +515,7 @@ class BoidsDemo extends Game {
     static MAX_DELTA = 1 / 20;
 
     preload() {
-        Gol.files.loadImage("space", "assets/space.jpg");
+        Gol.files.loadImage("space", "assets/space_m.jpg");
     }
 
     create() {
