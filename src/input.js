@@ -15,8 +15,12 @@ class Input {
     constructor() {
         for (let i = 0; i < Input.MAX_TOUCHES; ++i) {
             this.touchInfo[i] = {
-                x: null,
-                y: null,
+                x: 0,
+                y: 0,
+                prevX: 0,
+                prevY: 0,
+                deltaX: 0,
+                deltaY: 0,
                 isTouched: false,
                 wasTouched: false,
                 isJustTouched: false
@@ -54,6 +58,14 @@ class Input {
 
     getY(touchId = 0) {
         return this.touchInfo[touchId].y;
+    }
+
+    getDeltaX(touchId = 0) {
+        return this.touchInfo[touchId].deltaX;
+    }
+
+    getDeltaY(touchId = 0) {
+        return this.touchInfo[touchId].deltaY;
     }
 
     initEvents() {
@@ -140,6 +152,10 @@ class Input {
         for(let info of this.touchInfo) {
             info.isJustTouched = info.isTouched && !info.wasTouched;
             info.wasTouched = info.isTouched;
+            info.deltaX = info.x - info.prevX;
+            info.deltaY = info.y - info.prevY;
+            info.prevX = info.x;
+            info.prevY = info.y;
         }
 
     }

@@ -1,6 +1,6 @@
 import { Gol, Game, Screen, graphics, glMatrix, math } from "../../dist/goliath.js";
-const { Drawable, ShaderInstance, Texture, PerspectiveCamera, Sprite, OrthographicCamera, Mesh, Batch, Shader, ParticleSystem, Particle } = graphics;
-const { Cube, Sphere, Quad, Cone } = graphics.meshes;
+const { Drawable, ShaderInstance, Texture, PerspectiveCamera, OrthographicCamera, TextDrawable } = graphics;
+const { Cube, Cone, Ellipse } = graphics.meshes;
 const { vec2, vec3, vec4, quat, mat3, mat4 } = glMatrix;
 const { MathUtils, LinearSpline } = math;
 
@@ -89,10 +89,11 @@ class Boid {
     static SPEED = 25;
     static ACCELERATION = this.SPEED / 2.5;
     static MAX_STEERING_FORCE = this.ACCELERATION / 20;
-    static WANDER_FORCE = 5;
+    static WANDER_FORCE = 3;
     static SEPARATION_FORCE = 20;
     static COHESION_FORCE = 5;
     static ALIGNMENT_FORCE = 10;
+    static SEEK_FORCE = 6;
 
     static ids = 0;
 
@@ -105,22 +106,9 @@ class Boid {
 
         const colorSpline = new LinearSpline((x, a, b) => vec4.lerp(vec4.create(), a, b, x));
         colorSpline.addPoint(0, [1, 1, 1, 1]);
-        colorSpline.addPoint(0.5, [0, 0, 0, 1]);
+        colorSpline.addPoint(0.5, [0.5, 0.5, 0.5, 1]);
         colorSpline.addPoint(1, [1, 1, 1, 1]);
         this.drawable = new Drawable(
-            /*new SpaceshipMesh({
-                colors: colorSpline,
-                widthSegments: 64
-            }),*/
-            /*new Cube({
-                colors: [...new Array(6)].map((e, i) => {
-                    if(i == 1) {
-                        return [1, 0, 0, 1];
-                    }
-                    const v = 1 - i * 0.1;
-                    return [v, v, v, 1];
-                })
-            }),*/
             new Cone({
                 colors: colorSpline,
                 widthSegments: 64
@@ -139,9 +127,9 @@ class Boid {
         
         vec3.set(
             this.scale,
-            3,
+            4,
             4, 
-            3
+            4
         );
 
         this.maxSteeringForce = params.maxSteeringForce;
@@ -165,12 +153,10 @@ class Boid {
         this.radius = 3;
 
         this.destination = [
-            MathUtils.rand(-1, 1) * 250,
-            MathUtils.rand(-1, 1) * 250,
-            MathUtils.rand(-1, 1) * 250,
+            0,
+            0,
+            0,
         ];
-        this.counter = 0;
-        this.destinationChangeDelay = 2500;
     }
 
     get position() {
@@ -186,17 +172,8 @@ class Boid {
     }
 
     applyWander(delta) {
-        this.counter += delta * 1000;
-        if(this.counter >= this.destinationChangeDelay) {
-            this.destinationChangeDelay = MathUtils.randInt(1000, 4000);
-            this.counter = 0;
-            this.destination = [
-                MathUtils.rand(-1, 1) * 100,
-                MathUtils.rand(-1, 1) * 100,
-                MathUtils.rand(-1, 1) * 100,
-            ];
-        }
-        this.wanderAngle1 += MathUtils.rand(-1, 1) * 0.2 * Math.PI;
+        
+        this.wanderAngle1 += MathUtils.rand(-1, 1) * 20 * Math.PI * delta;
         const sin1 = Math.sin(this.wanderAngle1);
         const cos1 = Math.cos(this.wanderAngle1);
         const randomPoint = [
@@ -204,13 +181,26 @@ class Boid {
             0,
             sin1
         ];
-        //vec3.copy(randomPoint, this.destination);
+        
         vec3.normalize(randomPoint, randomPoint);
         const pointAhead = vec3.clone(this.direction);
         vec3.scale(pointAhead, pointAhead, 5);
-        vec3.add(pointAhead, pointAhead, randomPoint/*vec3.lerp(vec3.create(), randomPoint, pointAhead, 2 * delta)*/);
+        vec3.add(pointAhead, pointAhead, randomPoint);
         vec3.normalize(pointAhead, pointAhead);
         return vec3.scale(pointAhead, pointAhead, Boid.WANDER_FORCE);
+    }
+
+    applySeek() {
+        
+        const distance = Math.max((vec3.dist(this.destination, this.position) - 50) / 250) ** 2;
+
+        const direction = vec3.sub(vec3.create(), this.destination, this.position);
+        vec3.normalize(direction, direction);
+
+        const forceVector = vec3.create();
+        vec3.scale(forceVector, direction, Boid.SEEK_FORCE * distance);
+
+        return forceVector;
     }
 
     applySeparation(nearby) {
@@ -256,24 +246,20 @@ class Boid {
 
     applySteering(delta) {
 
-        const nearby = this.game.visibilityGrid.getItems([this.position[0], this.position[2]], 15).filter(e => e != this && vec3.dist(e.position, this.position) > 0.001);
-
-        this.fireCooldown -= delta * 1000;
-        if(this.fireCooldown <= 0) {
-            this.fireCooldown = 250;
-            this.fire();
-        }
+        const nearby = this.game.visibilityGrid.getItems([this.position[0], this.position[2]], 30).filter(e => e != this && vec3.dist(e.position, this.position) > 0.001);
 
         const wanderVelocity = this.applyWander(delta);
         const separationVelocity = this.applySeparation(nearby);
         const cohesionVelocity = this.applyCohesion(nearby);
         const alignmentVelocity = this.applyAlignment(nearby);
+        const seekVelocity = this.applySeek();
 
         const steeringForce = [0, 0, 0];
         vec3.add(steeringForce, steeringForce, wanderVelocity);
         vec3.add(steeringForce, steeringForce, separationVelocity);
         vec3.add(steeringForce, steeringForce, cohesionVelocity);
         vec3.add(steeringForce, steeringForce, alignmentVelocity);
+        vec3.add(steeringForce, steeringForce, seekVelocity);
 
         vec3.scale(steeringForce, steeringForce, 1 * this.acceleration * delta);
 
@@ -320,13 +306,58 @@ class Boid {
 
 }
 
-class BoidsDemo extends Game {
+class IntroScreen extends Screen {
 
-    preload() {
-        Gol.files.loadImage("space", "assets/space.jpg");
+    constructor(game) {
+        super();
+        this.game = game;
+        this.uiCamera = game.uiCamera;
     }
 
-    create() {
+    show() {
+        this.introText = new TextDrawable(Gol.graphics.getFont("Consolas"), {
+            text: "Swipe to look around",
+            align: "center"
+        });
+        this.introText.position[0] = this.uiCamera.viewportWidth / 2;
+        this.introText.position[1] = this.uiCamera.viewportHeight / 2;
+        this.introText.scale[0] = 24;
+        this.introText.scale[1] = 24;
+
+        setTimeout(() => {
+            this.game.setScreen(new MainScreen(this.game));
+        }, 2000);
+    }
+
+    render(delta) {
+
+        Gol.gl.viewport(0, 0, Gol.graphics.width, Gol.graphics.height);
+        Gol.gl.clearColor(0, 0, 0, 1);
+        Gol.gl.clear(Gol.gl.COLOR_BUFFER_BIT);
+
+        const uiConstants = {
+            ambientColor: [1, 1, 1]
+        };
+        this.uiCamera.updateConstants(uiConstants);
+
+        Gol.gl.enable(Gol.gl.BLEND);
+        Gol.gl.blendFunc(Gol.gl.ONE, Gol.gl.ONE);
+
+        this.introText.draw(uiConstants);
+
+    }
+
+}
+
+class MainScreen extends Screen {
+
+    constructor(game) {
+        super();
+        this.game = game;
+        this.uiCamera = game.uiCamera;
+    }
+
+    show() {
         this.spaceTexture = new Texture(Gol.files.get("space"), {
             filter: Gol.gl.LINEAR_MIPMAP_LINEAR
         });
@@ -336,7 +367,7 @@ class BoidsDemo extends Game {
         this.background = new Drawable(
             new Cube({
                 textureFaces: "skybox",
-                textureError: 0.0007,
+                textureError: 0.001,
                 width: 1000,
                 height: 1000,
                 depth: 1000
@@ -346,8 +377,8 @@ class BoidsDemo extends Game {
         );
 
         this.visibilityGrid = new VisibilityGrid(
-            [[-300, -300], [300, 300]],
-            [30, 30]
+            [[-500, -500], [500, 500]],
+            [100, 100]
         );
 
         this.boids = [];
@@ -356,12 +387,16 @@ class BoidsDemo extends Game {
             maxSteeringForce: Boid.MAX_STEERING_FORCE,
             acceleration: Boid.ACCELERATION
         };
-        for(let i = 0; i < 300; ++i) {
+        for(let i = 0; i < BoidsDemo.BOIDS_COUNT; ++i) {
             const boid = new Boid(this, params);
             this.boids.push(boid);
         }
 
-        
+        this.textFps = new TextDrawable(Gol.graphics.getFont("Consolas"));
+        this.textFps.position[0] = 8;
+        this.textFps.position[1] = this.uiCamera.viewportHeight - 16;
+        this.textFps.scale[0] = 24;
+        this.textFps.scale[1] = 24;
     }
 
     resize(width, height) {
@@ -371,18 +406,23 @@ class BoidsDemo extends Game {
     }
 
     render(delta) {
-        const constants = {};
-        constants.ambientColor = [1, 1, 1];
+        delta = Math.min(BoidsDemo.MAX_DELTA, delta);
+        const constants = {
+            ambientColor: [1, 1, 1]
+        };
 
-        vec3.rotateY(this.camera.direction, this.camera.direction, [0, 1, 0], -0.1 * delta);
+        if(Gol.input.isMousePressed()) {
+            vec3.rotateY(this.camera.direction, this.camera.direction, this.camera.up, -Gol.input.getDeltaX() * 0.005);
+            this.camera.direction[1] = MathUtils.clamp(this.camera.direction[1] + Gol.input.getDeltaY() * 0.005, -2, 2);
+        } else {
+            vec3.rotateY(this.camera.direction, this.camera.direction, [0, 1, 0], -0.1 * delta);
+        }
+        
         this.camera.updateConstants(constants);
 
         Gol.gl.viewport(0, 0, Gol.graphics.width, Gol.graphics.height);
-
-        Gol.gl.clearColor(1, 1, 1, 1);
-
+        Gol.gl.clearColor(0, 0, 0, 1);
         Gol.gl.enable(Gol.gl.DEPTH_TEST);
-
         Gol.gl.clear(Gol.gl.COLOR_BUFFER_BIT | Gol.gl.DEPTH_BUFFER_BIT);
 
         vec3.copy(this.background.position, this.camera.position);
@@ -393,10 +433,36 @@ class BoidsDemo extends Game {
             boid.draw(constants);
         }
 
+        const uiConstants = {
+            ambientColor: [1, 1, 1]
+        };
+        this.uiCamera.updateConstants(uiConstants);
+
         Gol.gl.enable(Gol.gl.BLEND);
-        Gol.gl.blendFunc(Gol.gl.ONE, Gol.gl.ONE_MINUS_SRC_ALPHA);
+        Gol.gl.blendFunc(Gol.gl.ONE, Gol.gl.ONE);
+
+        this.textFps.setText("FPS: " + Gol.graphics.fps);
+        this.textFps.draw(uiConstants);
 
         Gol.gl.disable(Gol.gl.BLEND);
+    }
+
+}
+
+class BoidsDemo extends Game {
+
+    static BOIDS_COUNT = 250;
+    static MAX_DELTA = 1 / 20;
+
+    preload() {
+        Gol.files.loadImage("space", "assets/space.jpg");
+    }
+
+    create() {
+
+        this.uiCamera = new OrthographicCamera(360, 480);
+
+        this.setScreen(new IntroScreen(this));
     }
 
 }
