@@ -1,6 +1,6 @@
 import { Gol, Game, Screen, graphics, glMatrix, math } from "../../dist/goliath.js";
-const { Drawable, ShaderInstance, Texture, PerspectiveCamera, OrthographicCamera, TextDrawable } = graphics;
-const { Cube, Cone, Ellipse } = graphics.meshes;
+const { Drawable, ShaderInstance, Texture, PerspectiveCamera, OrthographicCamera, TextDrawable, DrawableGroup } = graphics;
+const { Cube, Cone } = graphics.meshes;
 const { vec2, vec3, vec4, quat, mat3, mat4 } = glMatrix;
 const { MathUtils, LinearSpline } = math;
 
@@ -35,6 +35,7 @@ class VisibilityGrid {
         this.bounds = bounds;
         this.dimensions = dimensions;
         const [x, z] = dimensions;
+        this.globalItems = [];
         this.cells = [...new Array(z)].map(e => [...new Array(x)].map(e => new Map()));
         this.cellSize = vec2.create();
         vec2.sub(this.cellSize, bounds[1], bounds[0]);
@@ -74,6 +75,14 @@ class VisibilityGrid {
         return Array.from(items);
     }
 
+    addGlobal(e) {
+        this.globalItems.push(e);
+    }
+
+    getGlobalItems() {
+        return this.globalItems;
+    }
+
     getCellIndex(position) {
         const x = MathUtils.step(this.bounds[0][0], this.bounds[1][0], position[0]);
         const z = MathUtils.step(this.bounds[0][1], this.bounds[1][1], position[1]);
@@ -86,14 +95,15 @@ class VisibilityGrid {
 
 class Boid {
 
-    static SPEED = 25;
+    static SPEED = 40;
     static ACCELERATION = this.SPEED / 2.5;
     static MAX_STEERING_FORCE = this.ACCELERATION / 20;
     static WANDER_FORCE = 3;
     static SEPARATION_FORCE = 20;
     static COHESION_FORCE = 5;
     static ALIGNMENT_FORCE = 10;
-    static SEEK_FORCE = 6;
+    static ORIGIN_FORCE = 40;
+    static COLLISION_FORCE = 50;
 
     static ids = 0;
 
@@ -117,7 +127,7 @@ class Boid {
             null
         );
 
-        this.drawable.shader.setUniform("ambientColor", hslToRgb(Math.random(), 1, 0.5));
+        this.drawable.shader.setUniform("ambientColor", params.color);
 
         vec3.set(this.position,
             MathUtils.rand(-1, 1) * 250,
@@ -150,13 +160,9 @@ class Boid {
 
         this.visibilityIndex = game.visibilityGrid.updateItem(this.id, this);
 
-        this.radius = 3;
+        this.radius = 2;
 
-        this.destination = [
-            0,
-            0,
-            0,
-        ];
+        this.destination = vec3.clone(params.seekDestination);
     }
 
     get position() {
@@ -192,13 +198,13 @@ class Boid {
 
     applySeek() {
         
-        const distance = Math.max((vec3.dist(this.destination, this.position) - 50) / 250) ** 2;
+        const distance = Math.max((vec3.dist(this.destination, this.position) - 50) / 500) ** 2;
 
         const direction = vec3.sub(vec3.create(), this.destination, this.position);
         vec3.normalize(direction, direction);
 
         const forceVector = vec3.create();
-        vec3.scale(forceVector, direction, Boid.SEEK_FORCE * distance);
+        vec3.scale(forceVector, direction, Boid.ORIGIN_FORCE * distance);
 
         return forceVector;
     }
@@ -206,7 +212,7 @@ class Boid {
     applySeparation(nearby) {
         const forceVector = [0, 0, 0];
         for(let e of nearby) {
-            const dist = Math.max(vec3.dist(this.position, e.position) - (this.radius + e.radius), 0.001);
+            const dist = Math.max(vec3.dist(this.position, e.position) - 1.5 * (this.radius + e.radius), 0.001);
             const directionFromEntity = vec3.sub(vec3.create(), this.position, e.position);
             vec3.normalize(directionFromEntity, directionFromEntity);
             vec3.scale(directionFromEntity, directionFromEntity, Boid.SEPARATION_FORCE / dist);
@@ -244,15 +250,29 @@ class Boid {
         return forceVector;
     }
 
+    applyCollisionAvoidance() {
+        const colliders = this.game.visibilityGrid.getGlobalItems();
+        const force = [0, 0, 0];
+        for(let c of colliders) {
+            const dist = Math.max(vec3.dist(this.position, c.position) - 1.5 * (this.radius + 10), 0.001);
+            const directionFromEntity = vec3.sub(vec3.create(), this.position, c.position);
+            vec3.normalize(directionFromEntity, directionFromEntity);
+            vec3.scale(directionFromEntity, directionFromEntity, Boid.COLLISION_FORCE / dist);
+            vec3.add(force, force, directionFromEntity);
+        }
+        return force;
+    }
+
     applySteering(delta) {
 
-        const nearby = this.game.visibilityGrid.getItems([this.position[0], this.position[2]], 30).filter(e => e != this && vec3.dist(e.position, this.position) > 0.001);
+        const nearby = this.game.visibilityGrid.getItems([this.position[0], this.position[2]], 15).filter(e => e != this && vec3.dist(e.position, this.position) > 0.001);
 
         const wanderVelocity = this.applyWander(delta);
         const separationVelocity = this.applySeparation(nearby);
         const cohesionVelocity = this.applyCohesion(nearby);
         const alignmentVelocity = this.applyAlignment(nearby);
         const seekVelocity = this.applySeek();
+        const collisionVelocity = this.applyCollisionAvoidance();
 
         const steeringForce = [0, 0, 0];
         vec3.add(steeringForce, steeringForce, wanderVelocity);
@@ -260,8 +280,9 @@ class Boid {
         vec3.add(steeringForce, steeringForce, cohesionVelocity);
         vec3.add(steeringForce, steeringForce, alignmentVelocity);
         vec3.add(steeringForce, steeringForce, seekVelocity);
+        vec3.add(steeringForce, steeringForce, collisionVelocity);
 
-        vec3.scale(steeringForce, steeringForce, 1 * this.acceleration * delta);
+        vec3.scale(steeringForce, steeringForce, this.acceleration * delta);
 
         if(vec3.len(steeringForce) > this.maxSteeringForce) {
             vec3.normalize(steeringForce, steeringForce);
@@ -357,17 +378,63 @@ class MainScreen extends Screen {
         this.uiCamera = game.uiCamera;
     }
 
+    createBoids() {
+        this.boids = [];
+        this.baseGroup = new DrawableGroup(
+            new ShaderInstance(Gol.graphics.getShader("simple")),
+            null
+        );
+        const positions = [
+            [-150, 25, -200],
+            [175, 50, -150],
+            [150, 0, 200],
+            [-200, 25, 175]
+        ];
+        for(let i = 0; i < positions.length; ++i) {
+            const baseColor = hslToRgb(Math.random(), 1, 0.5);
+            const base = new Drawable(
+                new Cube({
+                    colors: [...new Array(6)].map((e, i) => {
+                        const v = 1 - 0.1 * i;
+                        const vec = [v, v, v, 1];
+                        return vec4.mul(vec, vec, [...baseColor, 1]);
+                    })
+                }),
+                new ShaderInstance(Gol.graphics.getShader("simple")),
+                null
+            );
+            vec3.copy(base.position, positions[i]);
+            vec3.set(base.scale, 16, 16, 16);
+            this.visibilityGrid.addGlobal(base);
+            this.baseGroup.add(base);
+                
+            const params = {
+                speed: Boid.SPEED,
+                maxSteeringForce: Boid.MAX_STEERING_FORCE,
+                acceleration: Boid.ACCELERATION,
+                seekDestination: positions[i],
+                color: baseColor
+            };
+            for(let j = 0; j < 50; ++j) {
+                const boid = new Boid(this, params);
+                this.boids.push(boid);
+            }
+        }
+    }
+
     show() {
         this.spaceTexture = new Texture(Gol.files.get("space"), {
             filter: Gol.gl.LINEAR_MIPMAP_LINEAR
         });
 
         this.camera = new PerspectiveCamera(60, Gol.graphics.width, Gol.graphics.height, 0.1, 1000);
+        vec3.set(this.camera.position, 0, 20, 0);
+        this.camera.lookAt(-100, 0, 150);
 
         this.background = new Drawable(
             new Cube({
                 textureFaces: "skybox",
-                textureError: 0.001,
+                textureError: 0.0007,
                 width: 1000,
                 height: 1000,
                 depth: 1000
@@ -381,16 +448,7 @@ class MainScreen extends Screen {
             [100, 100]
         );
 
-        this.boids = [];
-        const params = {
-            speed: Boid.SPEED,
-            maxSteeringForce: Boid.MAX_STEERING_FORCE,
-            acceleration: Boid.ACCELERATION
-        };
-        for(let i = 0; i < BoidsDemo.BOIDS_COUNT; ++i) {
-            const boid = new Boid(this, params);
-            this.boids.push(boid);
-        }
+        this.createBoids();
 
         this.textFps = new TextDrawable(Gol.graphics.getFont("Consolas"));
         this.textFps.position[0] = 8;
@@ -428,6 +486,8 @@ class MainScreen extends Screen {
         vec3.copy(this.background.position, this.camera.position);
         this.background.draw(constants);
 
+        this.baseGroup.draw(constants);
+
         for(let boid of this.boids) {
             boid.update(delta);
             boid.draw(constants);
@@ -451,7 +511,7 @@ class MainScreen extends Screen {
 
 class BoidsDemo extends Game {
 
-    static BOIDS_COUNT = 250;
+    static BOIDS_COUNT = 200;
     static MAX_DELTA = 1 / 20;
 
     preload() {
