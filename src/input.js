@@ -1,30 +1,18 @@
-import { Gol } from "./gol";
-
 class Input {
 
     static MAX_TOUCHES = 10;
 
+    /**
+     * 
+     * @type {TouchInfo[]}
+     */
     touchInfo = [];
 
-    keyInfo = {
-        currentlyPressed: new Set(),
-        previouslyPressed: new Set(),
-        justPressed: new Set()
-    };
+    keyInfo = new KeyInfo();
 
     constructor() {
         for (let i = 0; i < Input.MAX_TOUCHES; ++i) {
-            this.touchInfo[i] = {
-                x: 0,
-                y: 0,
-                prevX: 0,
-                prevY: 0,
-                deltaX: 0,
-                deltaY: 0,
-                isTouched: false,
-                wasTouched: false,
-                isJustTouched: false
-            };
+            this.touchInfo[i] = new TouchInfo();
         }
     }
 
@@ -68,20 +56,22 @@ class Input {
         return this.touchInfo[touchId].deltaY;
     }
 
-    initEvents() {
-
-        const canvas = Gol.graphics.canvas;
+    /**
+     * 
+     * @param {HTMLElement} elem 
+     */
+    initEvents(elem) {
 
         addEventListener("keydown", (ev) => this.onKeyDown(ev));
         addEventListener("keyup", (ev) => this.onKeyUp(ev));
 
-        canvas.addEventListener("touchstart", (ev) => this.handleTouchEvent(ev));
-        canvas.addEventListener("touchmove", (ev) => this.handleTouchEvent(ev));
-        canvas.addEventListener("touchend", (ev) => this.handleTouchEvent(ev));
+        elem.addEventListener("touchstart", (ev) => this.handleTouchEvent(ev));
+        elem.addEventListener("touchmove", (ev) => this.handleTouchEvent(ev));
+        elem.addEventListener("touchend", (ev) => this.handleTouchEvent(ev));
 
-        canvas.addEventListener("mousedown", (ev) => this.handleMouseEvent(ev));
-        canvas.addEventListener("mousemove", (ev) => this.handleMouseEvent(ev));
-        canvas.addEventListener("mouseup", (ev) => this.handleMouseEvent(ev));
+        elem.addEventListener("mousedown", (ev) => this.handleMouseEvent(ev));
+        elem.addEventListener("mousemove", (ev) => this.handleMouseEvent(ev));
+        elem.addEventListener("mouseup", (ev) => this.handleMouseEvent(ev));
 
     }
 
@@ -142,28 +132,71 @@ class Input {
 
     update() {
 
-        this.keyInfo.currentlyPressed.forEach((val) => {
-            if(!this.keyInfo.previouslyPressed.has(val)) {
-                this.keyInfo.justPressed.add(val);
-            }
-        });
-        this.keyInfo.previouslyPressed = new Set(this.keyInfo.currentlyPressed);
+        this.keyInfo.update();
 
-        for(let info of this.touchInfo) {
-            info.isJustTouched = info.isTouched && !info.wasTouched;
-            info.wasTouched = info.isTouched;
-            if(info.isJustTouched) {
-                info.prevX = info.x;
-                info.prevY = info.y;
-            }
-            info.deltaX = info.x - info.prevX;
-            info.deltaY = info.y - info.prevY;
-            info.prevX = info.x;
-            info.prevY = info.y;
+        for (let info of this.touchInfo) {
+            info.update();
         }
 
     }
 
+}
+
+class TouchInfo {
+
+    x = 0;
+    y = 0;
+    prevX = 0;
+    prevY = 0;
+    deltaX = 0;
+    deltaY = 0;
+    isTouched = false;
+    wasTouched = false;
+    isJustTouched = false;
+
+    update() {
+        this.isJustTouched = this.isTouched && !this.wasTouched;
+        this.wasTouched = this.isTouched;
+        if (this.isJustTouched) {
+            this.prevX = this.x;
+            this.prevY = this.y;
+        }
+        this.deltaX = this.x - this.prevX;
+        this.deltaY = this.y - this.prevY;
+        this.prevX = this.x;
+        this.prevY = this.y;
+    }
+
+}
+
+class KeyInfo {
+
+    /**
+     * 
+     * @type {Set<string>}
+     */
+    currentlyPressed = new Set();
+
+    /**
+     * 
+     * @type {Set<string>}
+     */
+    previouslyPressed = new Set();
+
+    /**
+     * 
+     * @type {Set<string>}
+     */
+    justPressed = new Set();
+
+    update() {
+        this.currentlyPressed.forEach((val) => {
+            if (!this.previouslyPressed.has(val)) {
+                this.justPressed.add(val);
+            }
+        });
+        this.previouslyPressed = new Set(this.currentlyPressed);
+    }
 }
 
 export {
