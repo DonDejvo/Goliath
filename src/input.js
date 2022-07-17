@@ -1,3 +1,5 @@
+import { Gol } from "./gol.js";
+
 class Input {
 
     static MAX_TOUCHES = 10;
@@ -65,58 +67,67 @@ class Input {
         addEventListener("keydown", (ev) => this.onKeyDown(ev));
         addEventListener("keyup", (ev) => this.onKeyUp(ev));
 
-        elem.addEventListener("touchstart", (ev) => this.handleTouchEvent(ev));
-        elem.addEventListener("touchmove", (ev) => this.handleTouchEvent(ev));
-        elem.addEventListener("touchend", (ev) => this.handleTouchEvent(ev));
-
-        elem.addEventListener("mousedown", (ev) => this.handleMouseEvent(ev));
-        elem.addEventListener("mousemove", (ev) => this.handleMouseEvent(ev));
-        elem.addEventListener("mouseup", (ev) => this.handleMouseEvent(ev));
-
-    }
-
-    handleTouchEvent(ev) {
-
-        try {
-
-            const boundingRect = ev.target.getBoundingClientRect();
-
-            for (let touch of ev.changedTouches) {
-
-                console.log(`x: ${touch.pageX}, y: ${touch.pageY}, id: ${touch.identifier}`);
-
-                const x = touch.pageX - boundingRect.x;
-                const y = touch.pageY - boundingRect.y;
-
-                let touchInfo = this.touchInfo.find(e => e.id === touch.identifier);
-                if (!touchInfo) {
-                    touchInfo = this.touchInfo.find(e => e.id === null);
-                    touchInfo.id = touch.identifier;
-                    if (!touchInfo) {
-                        continue;
-                    }
-                }
-
-                touchInfo.x = x;
-                touchInfo.y = boundingRect.height - y;
-
-                switch (ev.type) {
-                    case "touchstart":
-                        touchInfo.isTouched = true;
-                        break;
-                    case "touchend":
-                        touchInfo.isTouched = false;
-                }
-
-            }
-
-        } catch (err) {
-            console.log(err);
+        if (Gol.device.type == "mobile") {
+            elem.addEventListener("touchstart", (ev) => this.handleTouchEvent(ev));
+            elem.addEventListener("touchmove", (ev) => this.handleTouchEvent(ev));
+            elem.addEventListener("touchend", (ev) => this.handleTouchEvent(ev));
+        } else {
+            elem.addEventListener("mousedown", (ev) => this.handleMouseEvent(ev));
+            elem.addEventListener("mousemove", (ev) => this.handleMouseEvent(ev));
+            elem.addEventListener("mouseup", (ev) => this.handleMouseEvent(ev));
         }
 
     }
 
+    /**
+     * 
+     * @param {TouchEvent} ev 
+     */
+    handleTouchEvent(ev) {
+        if(ev.cancelable) {
+            ev.preventDefault();
+        }
+
+        const boundingRect = ev.target.getBoundingClientRect();
+
+        for (let touch of ev.changedTouches) {
+
+            const x = touch.pageX - boundingRect.x;
+            const y = touch.pageY - boundingRect.y;
+
+            let touchInfo = this.touchInfo.find(e => e.id === touch.identifier);
+            if (!touchInfo) {
+                touchInfo = this.touchInfo.find(e => !e.isTouched);
+                touchInfo.id = touch.identifier;
+                if (!touchInfo) {
+                    continue;
+                }
+            }
+
+            touchInfo.x = x;
+            touchInfo.y = boundingRect.height - y;
+
+            switch (ev.type) {
+                case "touchstart":
+                    touchInfo.isTouched = true;
+                    break;
+                case "touchend":
+                    touchInfo.isTouched = false;
+                    touchInfo.id = null;
+            }
+
+        }
+
+    }
+
+    /**
+     * 
+     * @param {MouseEvent} ev 
+     */
     handleMouseEvent(ev) {
+        if(ev.cancelable) {
+            ev.preventDefault();
+        }
 
         const boundingRect = ev.target.getBoundingClientRect();
         const x = ev.pageX - boundingRect.x;
@@ -137,11 +148,21 @@ class Input {
 
     }
 
+    /**
+     * 
+     * @param {KeyboardEvent} ev 
+     */
     onKeyDown(ev) {
+        if(ev.cancelable) {
+            ev.preventDefault();
+        }
         this.keyInfo.currentlyPressed.add(ev.code);
     }
 
     onKeyUp(ev) {
+        if(ev.cancelable) {
+            ev.preventDefault();
+        }
         this.keyInfo.currentlyPressed.delete(ev.code);
     }
 
