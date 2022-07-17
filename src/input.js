@@ -77,33 +77,41 @@ class Input {
 
     handleTouchEvent(ev) {
 
-        const boundingRect = ev.target.getBoundingClientRect();
+        try {
 
-        for (let touch of ev.changedTouches) {
+            const boundingRect = ev.target.getBoundingClientRect();
 
-            const x = touch.pageX - boundingRect.x;
-            const y = touch.pageY - boundingRect.y;
+            for (let touch of ev.changedTouches) {
 
-            let touchInfo = this.touchInfo.find(e => e.id === touch.identifier);
-            if(!touchInfo) {
-                touchInfo = this.touchInfo.find(e => e.id === null);
-                touchInfo.id = touch.identifier;
-                if(!touchInfo) {
-                    continue;
+                console.log(`x: ${touch.pageX}, y: ${touch.pageY}, id: ${touch.identifier}`);
+
+                const x = touch.pageX - boundingRect.x;
+                const y = touch.pageY - boundingRect.y;
+
+                let touchInfo = this.touchInfo.find(e => e.id === touch.identifier);
+                if (!touchInfo) {
+                    touchInfo = this.touchInfo.find(e => e.id === null);
+                    touchInfo.id = touch.identifier;
+                    if (!touchInfo) {
+                        continue;
+                    }
                 }
+
+                touchInfo.x = x;
+                touchInfo.y = boundingRect.height - y;
+
+                switch (ev.type) {
+                    case "touchstart":
+                        touchInfo.isTouched = true;
+                        break;
+                    case "touchend":
+                        touchInfo.isTouched = false;
+                }
+
             }
 
-            touchInfo.x = x;
-            touchInfo.y = boundingRect.height - y;
-
-            switch (ev.type) {
-                case "touchstart":
-                    touchInfo.isTouched = true;
-                    break;
-                case "touchend":
-                    touchInfo.isTouched = false;
-            }
-
+        } catch (err) {
+            console.log(err);
         }
 
     }
