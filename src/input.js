@@ -84,7 +84,14 @@ class Input {
             const x = touch.pageX - boundingRect.x;
             const y = touch.pageY - boundingRect.y;
 
-            const touchInfo = this.touchInfo[touch.identifier];
+            let touchInfo = this.touchInfo.find(e => e.id === touch.identifier);
+            if(!touchInfo) {
+                touchInfo = this.touchInfo.find(e => e.id === null);
+                touchInfo.id = touch.identifier;
+                if(!touchInfo) {
+                    continue;
+                }
+            }
 
             touchInfo.x = x;
             touchInfo.y = boundingRect.height - y;
@@ -144,6 +151,7 @@ class Input {
 
 class TouchInfo {
 
+    id = null;
     x = 0;
     y = 0;
     prevX = 0;
