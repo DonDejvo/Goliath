@@ -98,7 +98,11 @@ class MainScreen extends Screen {
 
         this.flameTexture = new Texture( Gol.files.get( 'flameparticle' ) );
 
+<<<<<<< HEAD
         this.fogTextureShader = Shader.create( Shader.Type.TEXTURE, { useFog: false } );
+=======
+        this.fogTextureShader = Shader.create(Shader.Type.TEXTURE);
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
 
         this.mainCamera = new PerspectiveCamera( 60, Gol.graphics.width, Gol.graphics.height, 0.1, 1000 );
         this.mainCamera.position[ 1 ] = 5;
@@ -109,6 +113,7 @@ class MainScreen extends Screen {
 
             const fire = new Fire( {
                 texture: this.flameTexture,
+<<<<<<< HEAD
                 camera: this.mainCamera
             } );
 
@@ -117,6 +122,14 @@ class MainScreen extends Screen {
             fire.position[ 2 ] = MathUtils.rand( - 30, 30 );
             this.fireplaces.push( fire );
 
+=======
+                camera: this.mainCamera,
+            });
+            fire.position[0] = MathUtils.rand(-30, 30);
+            fire.position[1] = 1;
+            fire.position[2] = MathUtils.rand(-30, 30);
+            this.fireplaces.push(fire);
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
         }
 
         this.fireplaces.sort( ( f1, f2 ) => vec3.sqrDist( f2.position, this.mainCamera.position ) - vec3.sqrDist( f1.position, this.mainCamera.position ) );

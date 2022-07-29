@@ -15,12 +15,16 @@ class Texture {
      */
     data;
 
+<<<<<<< HEAD
     /**
      *
      * @param {TexImageSource} data
      */
     constructor( data, params = {} ) {
 
+=======
+    constructor(data, params = {}) {
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
         this.data = data;
 
         this.id = Gol.gl.createTexture();

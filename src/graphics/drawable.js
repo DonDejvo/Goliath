@@ -79,6 +79,10 @@ class Drawable {
 
     }
 
+    setShader(shader) {
+        this.shader = shader;
+    }
+
     updateMatrix() {
 
         if ( this.matrixNeedsUpdate || this.matrixAutoUpdate ) {

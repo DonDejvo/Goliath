@@ -6,9 +6,13 @@ class Sphere extends Mesh {
 
     onInit() {
 
-        const radius = this.options.radius || 0.5;
+        if(this.options.radius === undefined) {
+            this.options.radius = 0.5;
+        }
+        const radius = this.options.radius;
         const widthSegments = this.options.widthSegments || 32;
         const heightSegments = this.options.heightSegments || 16;
+        const textureInvert = this.options.textureInvert === true;
 
         const positions = [];
         const uvs = [];
@@ -45,6 +49,7 @@ class Sphere extends Mesh {
 
         }
 
+<<<<<<< HEAD
         if ( this.options.colors === undefined ) {
 
             for ( let i = 0; i < ( widthSegments + 1 ) * ( heightSegments + 1 ); ++i ) {
@@ -52,6 +57,15 @@ class Sphere extends Mesh {
                 colorCache.push( [
                     1, 1, 1, 1
                 ] );
+=======
+        if(textureInvert) {
+            for(let i = 0; i < uvCache.length; i += 2) {
+                uvCache[i] = 1 - uvCache[i];
+            }
+        }
+
+        if (this.options.colors === undefined) {
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
 
             }
 

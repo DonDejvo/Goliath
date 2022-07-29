@@ -20,8 +20,12 @@ class TextDrawable extends Drawable {
 
     rainbow;
 
+<<<<<<< HEAD
     constructor( font, text = '', rainbow = false ) {
 
+=======
+    constructor(font, params = {}) {
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
         super(
             new Mesh(),
             new ShaderInstance( Gol.graphics.getShader( 'texture' ) ),
@@ -29,8 +33,9 @@ class TextDrawable extends Drawable {
         );
 
         this.font = font;
-        this.text = text;
-        this.rainbow = rainbow;
+        this.text = params.text || "";
+        this.rainbow = params.rainbow || false;
+        this.align = params.align || "left";
 
         this.updateGeometry();
 
@@ -47,7 +52,24 @@ class TextDrawable extends Drawable {
         const charHeight = this.font.charHeight;
         const charRatio = this.font.options.charRatio;
 
+<<<<<<< HEAD
         let offsetX = ( 1 - this.text.length ) * charRatio * 0.5;
+=======
+        let offsetX;
+        switch(this.align) {
+            case "center":
+                offsetX = (1 - this.text.length) * charRatio * 0.5;
+                break;
+            case "left":
+                offsetX = charRatio * 0.5;
+                break;
+            case "right":
+                offsetX = (0.5 - this.text.length) * charRatio;
+                break;
+            default:
+                offsetX = charRatio * 0.5;
+        }
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
 
         for ( let i = 0; i < this.text.length; ++i ) {
 

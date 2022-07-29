@@ -48,7 +48,13 @@ class DrawableGroup extends Drawable {
 
         drawable.updateMatrix();
 
+<<<<<<< HEAD
         this.mesh.buffers.forEach( ( info, name ) => {
+=======
+        const count = drawable.mesh.getBuffer("positions").data.length / 3;
+
+        this.mesh.buffers.forEach((info, name) => {
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
 
             const data = drawable.mesh.getBuffer( name ).data;
 

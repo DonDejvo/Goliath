@@ -4,9 +4,19 @@ class Cube extends Mesh {
 
     onInit() {
 
-        const halfWidth = this.options.width ? this.options.width / 2 : 0.5;
-        const halfHeight = this.options.height ? this.options.height / 2 : 0.5;
-        const halfDepth = this.options.depth ? this.options.depth / 2 : 0.5;
+        if(this.options.width === undefined) { 
+            this.options.width = 1;
+        }
+        if(this.options.height === undefined) {
+            this.options.height = 1;
+        }
+        if(this.options.depth === undefined) {
+            this.options.depth = 1;
+        }
+
+        const halfWidth = this.options.width / 2;
+        const halfHeight = this.options.height / 2;
+        const halfDepth = this.options.depth / 2;
 
         const positions = [
             // Front face
@@ -16,10 +26,17 @@ class Cube extends Mesh {
             - halfWidth, - halfHeight, halfDepth,
 
             // Back face
+<<<<<<< HEAD
             - halfWidth, halfHeight, - halfDepth,
             halfWidth, halfHeight, - halfDepth,
             halfWidth, - halfHeight, - halfDepth,
             - halfWidth, - halfHeight, - halfDepth,
+=======
+            halfWidth, halfHeight, -halfDepth,
+            -halfWidth, halfHeight, -halfDepth,
+            -halfWidth, -halfHeight, -halfDepth,
+            halfWidth, -halfHeight, -halfDepth,
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
 
             // Top face
             - halfWidth, halfHeight, - halfDepth,
@@ -110,7 +127,12 @@ class Cube extends Mesh {
         } else if ( textureFaces == 'multiple' ) {
 
             const w = 0.25, h = 0.5;
+            let e = 0.001;
+            if(this.options.textureError !== undefined) {
+                e = this.options.textureError;
+            }
 
+<<<<<<< HEAD
             const add = ( x, y ) => {
 
                 uvs.push(
@@ -118,6 +140,18 @@ class Cube extends Mesh {
                     w * ( x + 1 ), y * h,
                     w * ( x + 1 ), h * ( y + 1 ),
                     x * w, h * ( y + 1 )
+=======
+            const add = (x, y) => {
+                const l = x * w + e;
+                const r = (x + 1) * w - e;
+                const t = y * h + e;
+                const b = (y + 1) * h - e;
+                uvs.push(
+                    l, t,
+                    r, t,
+                    r, b,
+                    l, b
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
                 );
 
             };
@@ -135,10 +169,48 @@ class Cube extends Mesh {
             // Left face
             add( 0, 0 );
 
+        } else if(this.options.textureFaces == "skybox") {
+            
+            const w = 0.25, h = 0.5;
+            let e = 0.001;
+            if(this.options.textureError !== undefined) {
+                e = this.options.textureError;
+            }
+
+            const add = (x, y) => {
+                const l = x * w + e;
+                const r = (x + 1) * w - e;
+                const t = y * h + e;
+                const b = (y + 1) * h - e;
+                uvs.push(
+                    r, t,
+                    l, t,
+                    l, b,
+                    r, b
+                );
+            }
+
+            // Front face
+            add(1, 0);
+            // Back face
+            add(3, 0);
+            // Top face
+            add(0, 1);
+            // Bottom face
+            add(1, 1);
+            // Right face
+            add(0, 0);
+            // Left face
+            add(2, 0);
+
         } else {
+<<<<<<< HEAD
 
             throw new Error( 'options.textureFaces valid values are single or multiple' );
 
+=======
+            throw new Error("options.textureFaces valid values are single, multiple or skybox");
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
         }
 
         const indices = [
@@ -153,6 +225,7 @@ class Cube extends Mesh {
 
         const faceColors = [];
 
+<<<<<<< HEAD
         if ( this.options.colors === undefined ) {
 
             for ( let i = 0; i < 24; ++i ) {
@@ -183,6 +256,30 @@ class Cube extends Mesh {
 
                 }
 
+=======
+        if(this.options.colors === undefined) {
+            for(let i = 0; i < 6; ++i) {
+                faceColors.push([1, 1, 1, 1]);
+            }
+         } else if(this.options.colors.length == 1) {
+             const c = this.options.colors[0];
+             for(let i = 0; i < 6; ++i) {
+                faceColors.push(c);
+             }
+         } else if(this.options.colors.length == 6) {
+             for(let i = 0; i < 6; ++i) {
+                const c = this.options.colors[i];
+                faceColors.push(c);
+             }
+         } else {
+             throw new Error("options.colors requires 1 or 6 elements");
+         }
+
+        const colors = [];
+        for (let i = 0; i < 6; ++i) {
+            for (let j = 0; j < 4; ++j) {
+                colors.push(...faceColors[i]);
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
             }
 
         } else {

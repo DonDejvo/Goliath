@@ -4,8 +4,15 @@ class Quad extends Mesh {
 
     onInit() {
 
-        const halfWidth = this.options.width ? this.options.width / 2 : 0.5;
-        const halfHeight = this.options.height ? this.options.height / 2 : 0.5;
+        if(this.options.width === undefined) { 
+            this.options.width = 1;
+        }
+        if(this.options.height === undefined) {
+            this.options.height = 1;
+        }
+
+        const halfWidth = this.options.width / 2;
+        const halfHeight = this.options.height / 2;
 
         const positions = [
             - halfWidth, halfHeight, 0,

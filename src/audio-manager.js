@@ -33,6 +33,18 @@ class AudioManager {
      */
     cueGain;
 
+    /**
+     * 
+     * @type {AnalyserNode}
+     */
+    analyser;
+
+    /**
+     * 
+     * @type {Uint8Array}
+     */
+    dataArray;
+
     constructor() {
 
         this.audioContext = new AudioContext();
@@ -49,6 +61,12 @@ class AudioManager {
         this.cueGain.connect( this.masterGain );
         this.cueGain.gain.value = 1.0;
 
+<<<<<<< HEAD
+=======
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.connect(this.audioContext.destination);
+        this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
     }
 
     get masterVolume() {
@@ -87,8 +105,25 @@ class AudioManager {
 
     }
 
+<<<<<<< HEAD
     playBgMusic( clipName, params = {} ) {
 
+=======
+    setFrequencyDataSize(size) {
+        if(!MathUtils.isPowerOf2(size) && size < 16) {
+            throw new Error("size must be power of 2 and equal or bigger than 16");
+        }
+        this.analyser.fftSize = size * 2;
+        this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+    }
+
+    getFrequencyData() {
+        this.analyser.getByteFrequencyData(this.dataArray);
+        return this.dataArray;
+    }
+
+    playBgMusic(clipName, params = {}) {
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
         const loop = params.loop === undefined ? true : params.loop;
         const time = params.time === undefined ? 0 : params.time;
 
@@ -101,7 +136,12 @@ class AudioManager {
         this.bgMusicNode.loop = loop;
         this.bgMusicNode.start( time );
 
+<<<<<<< HEAD
         this.bgMusicNode.connect( this.bgMusicGain );
+=======
+        this.bgMusicNode.connect(this.bgMusicGain);
+        this.bgMusicNode.connect(this.analyser);
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
 
     }
 

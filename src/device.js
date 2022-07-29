@@ -7,6 +7,12 @@ class Device {
      */
     type;
 
+    /**
+     * 
+     * @type {boolean}
+     */
+    isIOS;
+
     constructor() {
 
         this.detectDeviceType();
@@ -26,7 +32,12 @@ class Device {
             this.type = 'desktop';
 
         }
+<<<<<<< HEAD
 
+=======
+        
+        this.isIOS = /iPhone|iPad|iPod/i.test(ua);
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
     }
 
 }

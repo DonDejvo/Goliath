@@ -75,9 +75,15 @@ class MainScreen extends Screen {
 
     show() {
 
+<<<<<<< HEAD
         Gol.audio.playBgMusic( 'soundtrack' );
 
         this.mouse = { x: 0, y: 0, idx: - 1 };
+=======
+        this.totalTime = 0;
+
+        this.mouse = { x: 0, y: 0, idx: -1 };
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
         this.blocks = [];
         this.movingUp = false;
         this.transparentBlocks = [];
@@ -695,11 +701,21 @@ class MainScreen extends Screen {
 
     drawScene() {
 
+        this.totalTime += Gol.graphics.delta;
+
         const constants = {
+<<<<<<< HEAD
             ambientColor: [ 1, 1, 1 ],
             fogNear: 5,
             fogFar: 60,
             fogColor: [ 0.8, 0.9, 1.0 ]
+=======
+            ambientColor: [1, 1, 1],
+            fogNear: 0,
+            fogFar: 30,
+            fogColor: [0.8, 0.9, 1.0],
+            fogTime: this.totalTime,
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
         };
 
 

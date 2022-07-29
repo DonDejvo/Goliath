@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 import { mat4, vec3 } from 'gl-matrix';
 import { Mesh } from './mesh.js';
+=======
+import { mat4, vec3 } from "gl-matrix";
+import { Mesh } from "./mesh.js";
+import { Drawable } from "./drawable.js";
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
 
 class Batch {
 
@@ -29,7 +35,17 @@ class Batch {
     texture = null;
 
     /**
+<<<<<<< HEAD
      *
+=======
+     * 
+     * @type {(position: vec3, drawable: Drawable) => void}
+     */
+    onCustomProcessPosition = null;
+
+    /**
+     * 
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
      * @type {Object}
      */
     constants = {
@@ -106,6 +122,7 @@ class Batch {
 
         this.mesh.buffers.forEach( ( info, name ) => {
 
+<<<<<<< HEAD
             const data = drawable.mesh.getBuffer( name ).data;
 
             switch ( name ) {
@@ -120,6 +137,18 @@ class Batch {
                         for ( let j = 0; j < 3; ++j ) {
 
                             info.data.push( vec[ j ] );
+=======
+            const data = drawable.mesh.getBuffer(name).data;
+            
+            switch(name) {
+                case "positions": 
+                    for(let i = 0; i < data.length; i += 3) {
+                        const vec = vec3.fromValues(data[i], data[i + 1], data[i + 2]);
+                        if(this.onCustomProcessPosition) {
+                            this.onCustomProcessPosition(vec, drawable);
+                        }
+                        vec3.transformMat4(vec, vec, drawable.modelMatrix);
+>>>>>>> 378055e7aafd91ccbdea1e168957e00facd76e27
 
                         }
 

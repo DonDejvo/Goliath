@@ -66,7 +66,7 @@ class Gol {
 
         }
 
-        this.input.initEvents();
+        this.input.initEvents(this.graphics.canvas);
 
         this.graphics.compileShaders();
         this.graphics.generateFonts();
